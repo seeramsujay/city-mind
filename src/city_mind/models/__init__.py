@@ -1,0 +1,1 @@
+"""CityMind - Models Package."""
