@@ -1,7 +1,7 @@
 """CityMind - Telemetry & WebSocket API Router."""
 
 from typing import List, Optional
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, HTTPException
 from city_mind.models.telemetry import ZoneMetrics, SensorReading
 from city_mind.services.telemetry_service import telemetry_service
 from city_mind.services.websocket_manager import ws_manager
@@ -21,7 +21,7 @@ async def get_zone(zone_id: str):
     """Get metrics for a specific zone."""
     metrics = telemetry_service.get_zone_metrics(zone_id)
     if not metrics:
-        return telemetry_service.get_all_zones()[0]
+        raise HTTPException(status_code=404, detail=f"Zone '{zone_id}' not found")
     return metrics
 
 

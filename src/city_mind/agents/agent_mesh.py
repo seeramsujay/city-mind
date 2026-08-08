@@ -1,7 +1,7 @@
 """CityMind - Autonomous Multi-Agent Mesh & Consensus Engine."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from city_mind.models.agent import (
     AgentRecommendation,
@@ -64,7 +64,7 @@ class AgentMesh:
 
         decision = MultiAgentDecision(
             decision_id=f"dec-{uuid.uuid4().hex[:8]}",
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             participating_agents=agents_involved,
             primary_domain=primary_rec.domain,
             zone_id=zone.zone_id,

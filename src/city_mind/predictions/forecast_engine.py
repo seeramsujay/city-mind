@@ -2,7 +2,7 @@
 
 import math
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from city_mind.models.prediction import (
     PredictiveAlert,
@@ -17,7 +17,7 @@ class ForecastEngine:
     def __init__(self):
         pass
 
-    def generate_alerts((self)) -> List[PredictiveAlert]:
+    def generate_alerts(self) -> List[PredictiveAlert]:
         zones = telemetry_service.get_all_zones()
         alerts = []
 
@@ -59,7 +59,7 @@ class ForecastEngine:
         return alerts
 
     def get_domain_forecast(self, domain: str, zone_id: str, horizon: ForecastHorizon = ForecastHorizon.FOUR_HOURS) -> DomainForecast:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         points_count = 12 if horizon == ForecastHorizon.FOUR_HOURS else 24
         interval_minutes = 20 if horizon == ForecastHorizon.FOUR_HOURS else 60
 

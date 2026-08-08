@@ -1,7 +1,7 @@
 """CityMind - Git-Inspired City Commit Models."""
 
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
@@ -28,7 +28,7 @@ class StateDiff(BaseModel):
 class CityCommit(BaseModel):
     commit_hash: str
     parent_hash: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     zone_id: str
     domain: DomainType
     trigger: TriggerType

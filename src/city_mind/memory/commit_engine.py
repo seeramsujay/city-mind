@@ -1,6 +1,6 @@
 """CityMind - Git-Inspired City Commit Engine."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 from city_mind.models.commit import CityCommit, StateDiff, TriggerType, CommitDiffResponse
 from city_mind.models.telemetry import DomainType
@@ -25,13 +25,14 @@ class CityCommitEngine:
                 "aqi": 42.0,
                 "status": "optimal"
             }
-            timestamp = datetime.utcnow().isoformat()
+            timestamp_dt = datetime.now(timezone.utc)
+            timestamp = timestamp_dt.isoformat()
             c_hash = CityCommit.generate_hash(None, timestamp, zone, "system", "Genesis Commit")
             
             commit = CityCommit(
                 commit_hash=c_hash,
                 parent_hash=None,
-                timestamp=datetime.utcnow(),
+                timestamp=timestamp_dt,
                 zone_id=zone,
                 domain=DomainType.INFRASTRUCTURE,
                 trigger=TriggerType.HEARTBEAT,
@@ -64,13 +65,14 @@ class CityCommitEngine:
         diffs = delta_logger.compute_diffs(zone_id, current_state)
         diff_summary = ", ".join([f"{d.metric}: {d.previous_value}->{d.current_value}" for d in diffs[:3]])
         
-        timestamp_str = datetime.utcnow().isoformat()
+        timestamp_dt = datetime.now(timezone.utc)
+        timestamp_str = timestamp_dt.isoformat()
         commit_hash = CityCommit.generate_hash(parent_hash, timestamp_str, zone_id, domain.value, diff_summary)
         
         commit = CityCommit(
             commit_hash=commit_hash,
             parent_hash=parent_hash,
-            timestamp=datetime.utcnow(),
+            timestamp=timestamp_dt,
             zone_id=zone_id,
             domain=domain,
             trigger=trigger,

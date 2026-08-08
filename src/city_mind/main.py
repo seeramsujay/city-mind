@@ -25,7 +25,7 @@ async def telemetry_event_handler(reading, zone_metrics):
     # 1. Broadcast telemetry reading via WebSockets
     await ws_manager.broadcast({
         "type": "telemetry",
-        "data": reading.dict()
+        "data": reading.model_dump(mode="json")
     })
 
     # 2. Check threshold crossings & anomalies
@@ -53,7 +53,7 @@ async def telemetry_event_handler(reading, zone_metrics):
         # Broadcast commit event to WebSocket subscribers
         await ws_manager.broadcast({
             "type": "city_commit",
-            "data": commit.dict()
+            "data": commit.model_dump(mode="json")
         })
 
 

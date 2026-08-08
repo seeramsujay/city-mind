@@ -1,6 +1,6 @@
 """CityMind - Predictive Intelligence Data Models."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel, Field
@@ -24,7 +24,7 @@ class PredictiveAlert(BaseModel):
     lat: float
     lng: float
     recommended_mitigation: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class TimeSeriesForecastPoint(BaseModel):

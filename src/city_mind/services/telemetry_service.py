@@ -1,7 +1,7 @@
 """CityMind - Telemetry Service & Hot Memory Buffer."""
 
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 from city_mind.models.telemetry import SensorReading, ZoneMetrics, ZoneStatus, DomainType
 
@@ -64,7 +64,7 @@ class TelemetryService:
         else:
             current.status = ZoneStatus.OPTIMAL
 
-        current.last_updated = datetime.utcnow()
+        current.last_updated = datetime.now(timezone.utc)
         return current
 
     def get_zone_metrics(self, zone_id: str) -> Optional[ZoneMetrics]:

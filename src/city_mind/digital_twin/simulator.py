@@ -1,7 +1,7 @@
 """CityMind - Digital Twin & What-If Scenario Simulator."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any
 from city_mind.services.telemetry_service import telemetry_service
 from city_mind.agents.agent_mesh import agent_mesh
@@ -14,7 +14,7 @@ class DigitalTwinSimulator:
     def get_digital_twin_state(self) -> Dict[str, Any]:
         zones = telemetry_service.get_all_zones()
         return {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "city_name": "Metro City Twin",
             "total_zones": len(zones),
             "zones_state": [
@@ -37,7 +37,7 @@ class DigitalTwinSimulator:
 
     def simulate_scenario(self, scenario_type: str, target_zone_id: str, intensity: float = 1.0) -> Dict[str, Any]:
         simulation_id = f"sim-{uuid.uuid4().hex[:8]}"
-        timestamp = datetime.utcnow()
+        timestamp = datetime.now(timezone.utc)
 
         zone = telemetry_service.get_zone_metrics(target_zone_id)
         zone_name = zone.zone_name if zone else target_zone_id
@@ -88,7 +88,7 @@ class DigitalTwinSimulator:
             "timestamp": timestamp,
             "simulated_impacts": simulated_impacts,
             "policy_recommendations": policy_recommendations,
-            "agent_mesh_responses": [d.dict() for d in agent_decisions],
+            "agent_mesh_responses": [d.model_dump(mode="json") for d in agent_decisions],
             "resilience_score": round(max(0.4, 0.95 - (intensity * 0.15)), 2)
         }
 
