@@ -1,10 +1,16 @@
-"""CityMind - Vector Memory Store & Embedding Pipeline."""
+"""CityMind - Vector Memory Store & Embedding Pipeline.
+
+Integrates CockroachDB Distributed Vector Indexing and Amazon Bedrock Titan embeddings.
+"""
 
 import math
 import re
 from collections import Counter
 from typing import List, Dict, Any, Tuple, Optional
 from city_mind.models.commit import CityCommit
+from city_mind.ai.cockroach_vector_store import cockroach_vector_store
+from city_mind.ai.bedrock_service import bedrock_service
+from city_mind.services.s3_archive import s3_archive_service
 
 
 def simple_tokenize(text: str) -> List[str]:
@@ -13,7 +19,7 @@ def simple_tokenize(text: str) -> List[str]:
 
 class VectorMemoryStore:
     def __init__(self):
-        # Stores (commit_hash, text, vector, metadata)
+        # Stores local (commit_hash, text, vector, metadata)
         self.documents: List[Dict[str, Any]] = []
 
     def _text_to_vector(self, text: str) -> Dict[str, float]:
@@ -41,13 +47,23 @@ class VectorMemoryStore:
             f"Summary: {commit.ai_summary}. Tags: {' '.join(commit.tags)}. "
             f"Diffs: {' '.join([d.metric for d in commit.diffs])}"
         )
-        vec = self._text_to_vector(text_content)
         
-        # Check if already indexed
+        # Generate 384-dim dense embedding vector using Amazon Bedrock Titan
+        dense_embedding = bedrock_service.generate_embeddings(text_content)
+        
+        # 1. Index into CockroachDB Distributed Vector Indexing engine
+        cockroach_indexed = cockroach_vector_store.index_commit(commit, dense_embedding)
+
+        # 2. Archive commit snapshot to Amazon S3 Object Archive
+        s3_archive_service.archive_commit(commit)
+
+        # 3. Maintain in-memory document store fallback
+        vec = self._text_to_vector(text_content)
         for doc in self.documents:
             if doc["commit_hash"] == commit.commit_hash:
                 doc["text"] = text_content
                 doc["vector"] = vec
+                doc["dense_embedding"] = dense_embedding
                 doc["commit"] = commit
                 return
 
@@ -55,10 +71,25 @@ class VectorMemoryStore:
             "commit_hash": commit.commit_hash,
             "text": text_content,
             "vector": vec,
+            "dense_embedding": dense_embedding,
             "commit": commit
         })
 
     def search(self, query: str, top_k: int = 5) -> List[Tuple[CityCommit, float]]:
+        # Check CockroachDB Distributed Vector Indexing first if enabled
+        if cockroach_vector_store.enabled:
+            query_embedding = bedrock_service.generate_embeddings(query)
+            crdb_results = cockroach_vector_store.search_similar(query_embedding, top_k=top_k)
+            if crdb_results:
+                matched_commits = []
+                for res_item, score in crdb_results:
+                    for doc in self.documents:
+                        if doc["commit_hash"] == res_item["commit_hash"]:
+                            matched_commits.append((doc["commit"], round(score, 4)))
+                            break
+                if matched_commits:
+                    return matched_commits
+
         if not self.documents:
             return []
 
@@ -67,7 +98,6 @@ class VectorMemoryStore:
 
         for doc in self.documents:
             score = self._cosine_similarity(query_vec, doc["vector"])
-            # Boost score if tags or keywords match query tokens directly
             query_tokens = set(simple_tokenize(query))
             doc_tokens = set(simple_tokenize(doc["text"]))
             overlap = len(query_tokens & doc_tokens)

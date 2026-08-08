@@ -4,13 +4,14 @@
 
 ### *A Git-Inspired AI Memory Operating System for Smart Cities*
 
+[![CockroachDB](https://img.shields.io/badge/CockroachDB-Vector_Indexing-6933FF?style=for-the-badge&logo=cockroachlabs&logoColor=white)](https://cockroachlabs.com)
+[![AWS Bedrock](https://img.shields.io/badge/AWS-Amazon_Bedrock-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com/bedrock/)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-%234a4a4a.svg?style=for-the-badge&logo=pnpm&logoColor=f69220)](https://pnpm.io)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
-[Architecture](#-system-architecture) • [Key Innovations](#-the-paradigm-shift) • [Tech Stack](#-tech-stack) • [Quickstart](#-getting-started) • [Roadmap](#-roadmap)
+[Architecture](#-system-architecture) • [CockroachDB & AWS Tooling](#-cockroachdb--aws-integrations) • [Key Innovations](#-the-paradigm-shift) • [Tech Stack](#-tech-stack) • [Quickstart](#-getting-started)
 
 ---
 
@@ -20,9 +21,30 @@
 
 **CityMind** transforms continuous, overwhelming IoT telemetry streams into a **persistent, version-controlled AI memory operating system**. 
 
-Instead of dumping millions of unindexed time-series sensor values into a storage black hole, CityMind records **event-driven state diffs**—termed **City Commits**. Every significant state change (threshold crossings, environmental anomalies, citizen feedback, or agent observations) creates an immutable commit.
+Instead of dumping millions of unindexed time-series sensor values into a storage black hole, CityMind records **event-driven state diffs**—termed **City Commits**. Every significant state change (threshold crossings, environmental anomalies, citizen feedback, or agent observations) creates an immutable SHA-256 commit.
 
 This enables autonomous AI agents to query historical context, perform root-cause analysis over past incidents, and make **explainable, evidence-backed urban decisions**.
+
+---
+
+## 🛠️ CockroachDB & AWS Integrations
+
+CityMind integrates distributed enterprise cloud infrastructure using **CockroachDB** and **AWS Services**:
+
+### 🪳 CockroachDB Ecosystem
+1. **CockroachDB Distributed Vector Indexing**:
+   - Stores and retrieves high-dimensional vector embeddings using native `VECTOR(384)` data types and `VECTOR INDEX` with cosine distance (`<=>`).
+   - Ensures zero consistency gap between operational state diffs and vector data.
+2. **CockroachDB Cloud Managed MCP Server (`https://cockroachlabs.cloud/mcp`)**:
+   - Enables AI agents to directly inspect, query, and optimize cluster database schemas via Model Context Protocol.
+3. **ccloud CLI & CockroachDB Agent Skills**:
+   - Executable agent skills (`.agents/skills/cockroachdb-management/SKILL.md`) for automated schema migrations and `ccloud` control plane administration.
+
+### ☁️ AWS Services
+1. **Amazon Bedrock**:
+   - Powers RAG reasoning and embedding generation using Bedrock Runtime (`anthropic.claude-3-5-sonnet` and `amazon.titan-embed-text-v1`).
+2. **Amazon S3**:
+   - Archives SHA-256 City Commit payloads and telemetry stream snapshots into persistent object storage (`citymind-event-memory-archive`).
 
 ---
 
@@ -31,43 +53,43 @@ This enables autonomous AI agents to query historical context, perform root-caus
 | Feature | Traditional Smart City Systems | 🌆 CityMind Memory OS |
 | :--- | :--- | :--- |
 | **Data Strategy** | Continuous 24/7 raw sensor stream logging | **Event-Driven State Diffs** (*City Commits*) |
-| **Storage Overhead** | Massive redundancy, high telemetry costs | **High Signal-to-Noise Ratio**, optimized delta logs |
+| **Vector Indexing** | Isolated vector database silos | **CockroachDB Distributed Vector Indexing** |
+| **AI Reasoning** | Isolated, reactive single-event rules | **Amazon Bedrock (Claude 3.5 Sonnet) RAG** |
 | **Historical Context** | Hard-to-query time-series databases | **Hierarchical AI Memory** (*Hot / Warm / Cold*) |
-| **AI Reasoning** | Isolated, reactive single-event rules | **Multi-Agent RAG + Causal Knowledge Graphs** |
-| **Decision Output** | Black-box alerts or raw dashboard charts | **Explainable AI** with evidence trails & past commit references |
+| **Archive Storage** | Static local file dumps | **Amazon S3 Event Archive** |
 
 ---
 
-## 🧠 System Architecture & Concepts
+## 🧠 System Architecture
 
 ```
                   ┌─────────────────────────────────────────┐
-                  │   IoT Sensors & Environmental Data       │
+                  │   IoT Sensors & Environmental Data      │
                   └────────────────────┬────────────────────┘
                                        │ Raw Telemetry Stream
                                        ▼
                   ┌─────────────────────────────────────────┐
-                  │    Hot Memory (Telemetry Buffer)         │
+                  │    Hot Memory (Telemetry Buffer)        │
                   └────────────────────┬────────────────────┘
                                        │ Threshold Crossings & Anomalies
                                        ▼
                   ┌─────────────────────────────────────────┐
-                  │    City Commit Generator (State Diffs)   │
+                  │    City Commit Generator (State Diffs)  │
                   └────────────────────┬────────────────────┘
-                                       │ Immutable Commits
+                                       │ Immutable SHA-256 Commits
                                        ▼
      ┌─────────────────────────────────┼─────────────────────────────────┐
      ▼                                 ▼                                 ▼
 ┌───────────┐                    ┌───────────┐                     ┌───────────┐
-│Warm Memory│                    │ Cold Graph│                     │Cold Vector│
-│(Delta Logs)│                   │(Knowledge)│                     │ (Embeds)  │
+│Warm Memory│                    │ Amazon S3 │                     │CockroachDB│
+│ (Postgres)│                    │ (Archive) │                     │ (Vector)  │
 └─────┬─────┘                    └─────┬─────┘                     └─────┬─────┘
       │                                │                                 │
       └────────────────────────────────┼─────────────────────────────────┘
                                        ▼
                   ┌─────────────────────────────────────────┐
-                  │ Autonomous Multi-Agent AI System         │
-                  │ (Traffic, Environment, Emergency, etc.) │
+                  │ Autonomous Multi-Agent Mesh & Bedrock   │
+                  │ (Amazon Bedrock RAG + Claude 3.5)       │
                   └────────────────────┬────────────────────┘
                                        │ Explainable Decisions & Actions
                                        ▼
@@ -76,138 +98,37 @@ This enables autonomous AI agents to query historical context, perform root-caus
                   └─────────────────────────────────────────┘
 ```
 
-### 1. 🌳 City Commits (State Delta Sourcing)
-Each commit represents a delta change in city status and stores:
-- **Timestamp & Zone**: Precise geographical and temporal boundaries.
-- **Previous & Current State**: Differential state metrics (e.g., `Traffic: Normal ➔ Congested`).
-- **Evidence & Sensor Payload**: Triggering threshold metrics, anomalies, or citizen reports.
-- **Parent Commit Hash**: Cryptographically linked history forming an immutable chain of urban events.
-
-### 2. 🏛️ Hierarchical Memory Tiers
-- 🔥 **Hot Memory** (1–2 hrs): High-speed live telemetry buffer for real-time threshold detection.
-- ☀️ **Warm Memory**: Operational event history storing structured City Commits and zone timelines.
-- ❄️ **Cold Memory**: Vector embeddings (Qdrant) and Causal Knowledge Graphs (Neo4j) for long-term semantic retrieval.
-
-### 3. 🤖 Autonomous Multi-Agent Mesh
-Specialized domain agents interact collaboratively over shared city memory:
-- 🚗 **Traffic Agent**: Congestion tracking, signal optimization, and routing.
-- 🌊 **Environment Agent**: Flood monitoring, air quality alerts, and weather impacts.
-- 🏗️ **Infrastructure Agent**: Power grid integrity, water system oversight, maintenance.
-- 🚨 **Emergency Agent**: Rapid incident response, disaster routing, and safety coordination.
-- 🏙️ **Citizen Services Agent**: Public feedback correlation and municipal service tracking.
-
----
-
-## 🛠️ Tech Stack
-
-### **Backend & AI Core**
-- **Framework**: [FastAPI](https://fastapi.tiangolo.com) (Async Python 3.10+)
-- **Task Queue**: [Celery](https://docs.celeryq.dev/) + [Redis](https://redis.io/)
-- **AI Orchestration**: [LangGraph](https://github.com/langchain-ai/langgraph) / LangChain
-- **Vector Search**: [Qdrant](https://qdrant.tech/)
-- **Graph Database**: [Neo4j](https://neo4j.com/)
-
-### **Data Layer**
-- **Relational / Event DB**: PostgreSQL / CockroachDB
-- **Time-Series Buffer**: TimescaleDB
-- **Broker**: MQTT / Apache Kafka
-
-### **Frontend Dashboard**
-- **UI Framework**: React + TypeScript
-- **Styling**: TailwindCSS + shadcn/ui
-- **Geospatial & Charts**: Leaflet / Mapbox & Recharts
-
----
-
-## 📂 Project Structure
-
-```
-city-mind/
-├── src/
-│   └── city_mind/         # Core Python Backend Package
-│       ├── __init__.py
-│       ├── main.py        # FastAPI Application Entrypoint
-│       ├── api/           # REST & WebSocket API Routes
-│       ├── core/          # Commit Generator & Delta Engine
-│       ├── models/        # Pydantic Schemas & DB Models
-│       └── agents/        # Multi-Agent RAG Orchestration
-├── IDEA.md                # In-depth Architectural Vision
-├── ROADMAP.md             # Development Phases & Milestones
-├── CONTRIBUTING.md        # Collaboration Guidelines
-├── pyproject.toml         # Python Project Metadata & Dependencies
-├── requirements.txt       # Compiled Dependencies (for pip/poetry users)
-├── .env.example           # Environment Template
-└── README.md              # Project Overview
-```
-
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
-- Python 3.10+
-- Node.js 18+ & `pnpm`
-- Git
-
-### 1. Repository Setup
+### 1. Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/city-mind.git
+git clone https://github.com/seeramsujay/city-mind.git
 cd city-mind
 
-# Copy the environment file
-cp .env.example .env
+# Install backend dependencies via uv
+uv sync
+
+# Install frontend dependencies via pnpm
+pnpm install
 ```
 
-### 2. Backend Installation
-
-#### Option A: Using `pip`
-```bash
-# Create and activate virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-#### Option B: Using `poetry`
-```bash
-poetry install
-```
-
-### 3. Run the Development Server
+### 2. Running Tests
 
 ```bash
-uvicorn src.city_mind.main:app --reload --port 8000
+# Run backend Pytest suite (includes CockroachDB & AWS tests)
+uv run pytest
 ```
 
-Visit `http://localhost:8000/docs` to interact with the OpenAPI Swagger documentation.
+### 3. Running Development Servers
 
----
+```bash
+# Terminal 1: Backend FastAPI Server
+uv run uvicorn city_mind.main:app --reload --port 8000
 
-## 🗺️ Roadmap & Status
-
-- [x] **Phase 1: Foundation & Core Repo Setup** — Initial architecture, FastAPI scaffolding, and commit schema design.
-- [ ] **Phase 2: Event Memory Engine** — Threshold detection, state delta logger, and commit chain timeline.
-- [ ] **Phase 3: AI Memory & Vector RAG** — Embeddings pipeline, Qdrant vector retrieval, and Neo4j causal knowledge graph.
-- [ ] **Phase 4: Autonomous Multi-Agent Mesh** — Specialized agents (Traffic, Environment, Emergency) with shared memory reasoning.
-- [ ] **Phase 5: Predictive Intelligence & Digital Twin** — Scenario simulations, flood forecasting, and preventive alerts.
-
-For a detailed phase breakdown, check out [ROADMAP.md](ROADMAP.md).
-
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!  
-Please read our [CONTRIBUTING.md](CONTRIBUTING.md) guide before submitting pull requests.
-
----
-
-<div align="center">
-
-Made with ❤️ for Smart, Resilient & Explainable Future Cities.
-
-</div>
+# Terminal 2: Frontend Vite Dev Server
+pnpm run dev
+```

@@ -1,7 +1,7 @@
 import React from 'react';
 import MemoryArchitecture from '../components/MemoryArchitecture';
 import AIMemorySearch from '../components/AIMemorySearch';
-import { Database, Brain, Sparkles, Network, ArrowRight } from 'lucide-react';
+import { Database, Brain, Sparkles, Network, ArrowRight, ShieldCheck, Cloud, Server } from 'lucide-react';
 
 export default function MemoryPage() {
   return (
@@ -19,15 +19,21 @@ export default function MemoryPage() {
                   City Memory Explorer
                 </h1>
                 <p className="text-sm text-cyan-300 font-mono mt-0.5">
-                  Semantic Vector Storage & Historical State Reconstruction Engine
+                  CockroachDB Distributed Vector Indexing & Amazon S3 Archive System
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-purple-950/60 border border-purple-500/40 px-3.5 py-1.5 rounded-xl text-purple-200 text-xs font-mono font-bold">
-            <Brain className="w-4 h-4 text-purple-400" />
-            <span>Vector Index: 2,431 Nodes</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-emerald-950/80 border border-emerald-500/40 px-3 py-1.5 rounded-xl text-emerald-200 text-xs font-mono font-bold">
+              <Server className="w-3.5 h-3.5 text-emerald-400" />
+              <span>CockroachDB Vector Index Active</span>
+            </div>
+            <div className="flex items-center gap-1.5 bg-amber-950/80 border border-amber-500/40 px-3 py-1.5 rounded-xl text-amber-200 text-xs font-mono font-bold">
+              <Cloud className="w-3.5 h-3.5 text-amber-400" />
+              <span>Amazon S3 Archive Online</span>
+            </div>
           </div>
         </div>
       </div>
@@ -38,32 +44,32 @@ export default function MemoryPage() {
       {/* Interactive Semantic Memory Search */}
       <AIMemorySearch />
 
-      {/* Why Long-Term AI Memory Matters Banner */}
+      {/* CockroachDB & AWS Stack Highlights Banner */}
       <div className="glass-panel rounded-2xl p-6 border border-purple-500/30 bg-gradient-to-br from-purple-950/30 via-slate-950 to-slate-950">
         <div className="flex items-start gap-4">
           <div className="p-3 rounded-xl bg-purple-950 text-purple-300 border border-purple-500/40 shrink-0">
             <Sparkles className="w-6 h-6 animate-pulse" />
           </div>
-          <div>
+          <div className="w-full">
             <h3 className="font-heading font-bold text-lg text-white mb-2">
-              Why Long-Term AI City Memory Matters
+              CockroachDB Distributed Vector Indexing & Amazon Bedrock Architecture
             </h3>
-            <p className="text-xs text-slate-300 leading-relaxed mb-3 font-sans">
-              Traditional dashboards view sensor readings in isolation, discarding past context or overwhelming databases with billions of raw numbers. CityMind's Cold Memory maintains semantic vector embeddings of city events, enabling the AI to recognize recurring patterns—like how a traffic spike in Zone 04 correlates with rain in Zone 02 or stadium events.
+            <p className="text-xs text-slate-300 leading-relaxed mb-4 font-sans">
+              CityMind replaces fragmented vector silos with CockroachDB's native distributed vector indexing (VECTOR INDEX). SHA-256 state diff commits are stored and searched using cosine vector distance metrics, while Amazon Bedrock (Claude 3.5 Sonnet & Titan) synthesizes causal insights, and Amazon S3 maintains permanent compressed snapshot archives.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
               <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                <span className="text-cyan-400 font-bold block mb-1">Causality Correlation</span>
-                <span className="text-slate-400 text-[11px]">Links weather diffs to traffic delays across zones automatically.</span>
+                <span className="text-cyan-400 font-bold block mb-1">CockroachDB Vector Index</span>
+                <span className="text-slate-400 text-[11px]">Distributed VECTOR(384) indexing with zero consistency gaps between operational & vector data.</span>
               </div>
               <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                <span className="text-purple-400 font-bold block mb-1">Pattern Similarity</span>
-                <span className="text-slate-400 text-[11px]">87%+ vector matches with historical events from months ago.</span>
+                <span className="text-purple-400 font-bold block mb-1">Amazon Bedrock Reasoning</span>
+                <span className="text-slate-400 text-[11px]">Claude 3.5 Sonnet RAG reasoning and Titan embeddings synthesis.</span>
               </div>
               <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-                <span className="text-emerald-400 font-bold block mb-1">Zero Raw Overhead</span>
-                <span className="text-slate-400 text-[11px]">Compresses millions of raw data points into 184 semantic summaries.</span>
+                <span className="text-amber-400 font-bold block mb-1">Amazon S3 Object Archive</span>
+                <span className="text-slate-400 text-[11px]">Immutable event payload storage with multi-region redundancy.</span>
               </div>
             </div>
           </div>

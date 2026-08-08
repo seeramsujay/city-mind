@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "cockroachdb_cloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@cockroachlabs/mcp-server",
+        "--endpoint",
+        "https://cockroachlabs.cloud/mcp"
+      ],
+      "env": {
+        "COCKROACH_API_KEY": "${COCKROACH_API_KEY}",
+        "COCKROACH_CLUSTER_ID": "${COCKROACH_CLUSTER_ID}"
+      },
+      "description": "CockroachDB Cloud Managed MCP Server for direct agent database schema management, cluster inspection, and vector index monitoring."
+    }
+  }
+}
