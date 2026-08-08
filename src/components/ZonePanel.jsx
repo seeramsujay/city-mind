@@ -1,10 +1,27 @@
-import React from 'react';
-import { X, GitCommit, AlertTriangle, ArrowUpRight, ArrowDownRight, Layers, ShieldCheck, Flame, Cpu } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, GitCommit, AlertTriangle, ArrowUpRight, ArrowDownRight, Layers, ShieldCheck, Flame, Cpu, Activity } from 'lucide-react';
+import { api } from '../services/api';
 
 export default function ZonePanel({ zone, commits, onClose, onViewCommitDetails }) {
+  const [hotMemoryReadings, setHotMemoryReadings] = useState([]);
+  const [loadingHotMemory, setLoadingHotMemory] = useState(false);
+
+  useEffect(() => {
+    if (!zone) return;
+    async function loadHotMemory() {
+      setLoadingHotMemory(true);
+      const res = await api.getHotMemory(zone.id, 10);
+      if (res.data) {
+        setHotMemoryReadings(res.data);
+      }
+      setLoadingHotMemory(false);
+    }
+    loadHotMemory();
+  }, [zone]);
+
   if (!zone) return null;
 
-  const latestCommitData = commits.find(c => c.id === zone.latestCommit) || commits[0];
+  const latestCommitData = commits.find(c => c.id === zone.latestCommit || c.zoneId === zone.id) || commits[0];
 
   const getSeverityBadge = (status) => {
     switch (status) {
@@ -44,14 +61,14 @@ export default function ZonePanel({ zone, commits, onClose, onViewCommitDetails 
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Current State vs Baseline */}
-        <div className="space-y-4 mb-6">
+        <div className="space-y-3 mb-5">
           <div className="flex items-center justify-between text-xs font-mono text-slate-400 uppercase tracking-wider">
             <span>Telemetry Metric</span>
             <span>Current vs Baseline</span>
@@ -145,6 +162,27 @@ export default function ZonePanel({ zone, commits, onClose, onViewCommitDetails 
           </div>
         </div>
 
+        {/* Hot Memory Sliding Window */}
+        {hotMemoryReadings.length > 0 && (
+          <div className="p-3.5 rounded-xl bg-slate-900/90 border border-cyan-500/20 mb-4 font-mono text-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-cyan-400 font-bold flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5 animate-pulse" />
+                HOT MEMORY READINGS
+              </span>
+              <span className="text-[10px] text-slate-400">Sliding Window</span>
+            </div>
+            <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
+              {hotMemoryReadings.slice(0, 4).map((r, idx) => (
+                <div key={idx} className="flex items-center justify-between text-[11px] bg-slate-950 p-1.5 rounded border border-slate-800">
+                  <span className="text-slate-300">{r.metric_name}</span>
+                  <span className="text-cyan-300 font-bold">{r.value} {r.unit}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Latest Commit Details Card */}
         {latestCommitData && (
           <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-950/40 to-slate-900 border border-cyan-500/30 mb-4">
@@ -168,7 +206,7 @@ export default function ZonePanel({ zone, commits, onClose, onViewCommitDetails 
               <span className="text-slate-400">Delta: <strong className="text-cyan-300">{latestCommitData.delta}</strong></span>
               <button 
                 onClick={() => onViewCommitDetails(latestCommitData)}
-                className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1"
+                className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1 cursor-pointer"
               >
                 View Full Trace →
               </button>
@@ -178,7 +216,7 @@ export default function ZonePanel({ zone, commits, onClose, onViewCommitDetails 
       </div>
 
       <div className="pt-3 border-t border-slate-800 text-[11px] font-mono text-slate-400 text-center">
-        {zone.sensorCount} active sensors monitored • Baseline synchronized
+        {zone.sensorCount} active sensors monitored • Live API Connected
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Brain, Sparkles, Database, GitCommit, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { api } from '../services/api';
 import { vectorSearchResults } from '../mockData';
 
 export default function AIMemorySearch() {
@@ -14,31 +15,44 @@ export default function AIMemorySearch() {
     "What caused the previous traffic spike?"
   ];
 
-  const handleSearch = (q) => {
+  const handleSearch = async (q) => {
     setQuery(q);
     setIsSearching(true);
-    setTimeout(() => {
-      setIsSearching(false);
-      // Pick matching or default result
-      if (q.toLowerCase().includes('garbage')) {
-        setActiveResult({
-          query: q,
-          matchedEvents: [
-            {
-              id: "HIST-309",
-              title: "Sector 7 Market Overflow",
-              zone: "Zone 07",
-              timeAgo: "7 days ago",
-              similarity: 91,
-              diff: "Garbage 71% → 94% (+23%)",
-              aiSummary: "Zone 07 experiences recurring garbage saturation during weekend market pop-ups due to bi-weekly collection limits."
-            }
-          ]
-        });
-      } else {
-        setActiveResult(vectorSearchResults[0]);
-      }
-    }, 600);
+    
+    const searchRes = await api.searchMemory(q);
+    setIsSearching(false);
+
+    if (searchRes.online && searchRes.data && searchRes.data.length > 0) {
+      setActiveResult({
+        query: q,
+        matchedEvents: searchRes.data.map(item => ({
+          id: item.commit_hash ? item.commit_hash.substring(0, 8).toUpperCase() : 'HIST-884',
+          title: item.summary ? item.summary.substring(0, 40) + '...' : 'City Event Match',
+          zone: item.zone_id ? item.zone_id.toUpperCase() : 'ZONE-04',
+          timeAgo: 'Warm Memory',
+          similarity: Math.round((item.relevance_score || 0.88) * 100),
+          diff: item.domain ? `Domain: ${item.domain}` : 'State Diff',
+          aiSummary: item.summary || 'Matched semantic vector event.'
+        }))
+      });
+    } else if (q.toLowerCase().includes('garbage')) {
+      setActiveResult({
+        query: q,
+        matchedEvents: [
+          {
+            id: "HIST-309",
+            title: "Sector 7 Market Overflow",
+            zone: "Zone 07",
+            timeAgo: "7 days ago",
+            similarity: 91,
+            diff: "Garbage 71% → 94% (+23%)",
+            aiSummary: "Zone 07 experiences recurring garbage saturation during weekend market pop-ups due to bi-weekly collection limits."
+          }
+        ]
+      });
+    } else {
+      setActiveResult(vectorSearchResults[0]);
+    }
   };
 
   return (
@@ -70,7 +84,7 @@ export default function AIMemorySearch() {
         <Brain className="w-5 h-5 text-cyan-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
         <button
           onClick={() => handleSearch(query || sampleQuestions[0])}
-          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs font-mono shadow glow-cyan flex items-center gap-1"
+          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs font-mono shadow glow-cyan flex items-center gap-1 cursor-pointer"
         >
           {isSearching ? 'Vector Searching...' : 'Query Memory'}
         </button>
@@ -83,7 +97,7 @@ export default function AIMemorySearch() {
           <button
             key={idx}
             onClick={() => handleSearch(q)}
-            className="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-800 transition-all hover:border-cyan-500/40 text-left"
+            className="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-800 transition-all hover:border-cyan-500/40 text-left cursor-pointer"
           >
             "{q}"
           </button>

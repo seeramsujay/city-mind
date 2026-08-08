@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Cpu, Activity, ShieldCheck, Database, Layers, Users, Brain, Zap } from 'lucide-react';
 
-export default function Navbar({ activePage, setActivePage, commitCount }) {
+export default function Navbar({ activePage, setActivePage, commitCount, isBackendOnline, wsConnected, onSimulateEvent }) {
   const [seconds, setSeconds] = useState(12);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function Navbar({ activePage, setActivePage, commitCount }) {
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActivePage('live-city')}>
           <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/30 border border-cyan-500/40 text-cyan-400 glow-cyan">
             <Brain className="w-6 h-6 animate-pulse" />
-            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
+            <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full ${wsConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -77,15 +77,20 @@ export default function Navbar({ activePage, setActivePage, commitCount }) {
         <div className="hidden lg:flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800/90 text-xs font-mono">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${wsConnected ? 'bg-emerald-400' : isBackendOnline ? 'bg-cyan-400' : 'bg-amber-400'}`}></span>
+              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${wsConnected ? 'bg-emerald-500' : isBackendOnline ? 'bg-cyan-500' : 'bg-amber-500'}`}></span>
             </span>
-            <span className="text-emerald-400 font-semibold">System Online</span>
+            <span className={wsConnected ? "text-emerald-400 font-semibold" : isBackendOnline ? "text-cyan-400 font-semibold" : "text-amber-400 font-semibold"}>
+              {wsConnected ? 'Live WS Engine' : isBackendOnline ? 'Backend REST' : 'Offline Mock'}
+            </span>
             <span className="text-slate-600">|</span>
-            <span className="text-slate-400">Last heartbeat: <strong className="text-slate-200">{seconds}s ago</strong></span>
+            <span className="text-slate-400">Heartbeat: <strong className="text-slate-200">{seconds}s</strong></span>
           </div>
 
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 text-xs font-medium transition-all">
+          <button 
+            onClick={onSimulateEvent}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 text-xs font-medium transition-all cursor-pointer"
+          >
             <Zap className="w-3.5 h-3.5" />
             <span>Simulate Event</span>
           </button>
