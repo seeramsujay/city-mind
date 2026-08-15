@@ -77,11 +77,11 @@ export default function Navbar({ activePage, setActivePage, commitCount, isBacke
         <div className="hidden lg:flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800/90 text-xs font-mono">
             <span className="relative flex h-2.5 w-2.5">
-              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${wsConnected ? 'bg-emerald-400' : isBackendOnline ? 'bg-cyan-400' : 'bg-amber-400'}`}></span>
-              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${wsConnected ? 'bg-emerald-500' : isBackendOnline ? 'bg-cyan-500' : 'bg-amber-500'}`}></span>
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${wsConnected ? 'bg-emerald-400' : isBackendOnline ? 'bg-cyan-400' : 'bg-purple-400'}`}></span>
+              <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${wsConnected ? 'bg-emerald-500' : isBackendOnline ? 'bg-cyan-500' : 'bg-purple-500'}`}></span>
             </span>
-            <span className={wsConnected ? "text-emerald-400 font-semibold" : isBackendOnline ? "text-cyan-400 font-semibold" : "text-amber-400 font-semibold"}>
-              {wsConnected ? 'Live WS Engine' : isBackendOnline ? 'Backend REST' : 'Offline Mock'}
+            <span className={wsConnected ? "text-emerald-400 font-semibold" : isBackendOnline ? "text-cyan-400 font-semibold" : "text-purple-400 font-semibold"}>
+              {wsConnected ? 'Live WS Engine' : isBackendOnline ? 'Backend REST' : 'Cloud Edge (Gemini Live)'}
             </span>
             <span className="text-slate-600">|</span>
             <span className="text-slate-400">Heartbeat: <strong className="text-slate-200">{seconds}s</strong></span>

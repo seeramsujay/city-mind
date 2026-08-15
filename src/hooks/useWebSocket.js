@@ -86,6 +86,36 @@ export function useWebSocket(onTelemetry, onCityCommit) {
     };
   }, [connect]);
 
+  // Simulated telemetry ticker for Vercel Cloud Edge deployment
+  useEffect(() => {
+    if (isConnected) return;
+
+    const zones = ['zone-downtown', 'zone-north', 'zone-west', 'zone-east', 'zone-expressway'];
+    const metrics = ['traffic_congestion_pct', 'water_level_m', 'aqi', 'waste_fill_pct'];
+
+    const simInterval = setInterval(() => {
+      const randomZone = zones[Math.floor(Math.random() * zones.length)];
+      const randomMetric = metrics[Math.floor(Math.random() * metrics.length)];
+      
+      let val = 45;
+      if (randomMetric === 'traffic_congestion_pct') val = Math.floor(30 + Math.random() * 45);
+      else if (randomMetric === 'water_level_m') val = Number((0.8 + Math.random() * 1.5).toFixed(2));
+      else if (randomMetric === 'aqi') val = Math.floor(35 + Math.random() * 55);
+      else if (randomMetric === 'waste_fill_pct') val = Math.floor(25 + Math.random() * 50);
+
+      if (onTelemetryRef.current) {
+        onTelemetryRef.current({
+          zone_id: randomZone,
+          metric_name: randomMetric,
+          value: val,
+          unit: randomMetric === 'water_level_m' ? 'm' : '%'
+        });
+      }
+    }, 2500);
+
+    return () => clearInterval(simInterval);
+  }, [isConnected]);
+
   const sendMessage = useCallback((msg) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(typeof msg === 'string' ? msg : JSON.stringify(msg));

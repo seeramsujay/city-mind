@@ -110,19 +110,19 @@ export default function AIInsightsPage() {
             <div className="flex items-center justify-between text-purple-300 font-bold border-b border-purple-500/20 pb-2">
               <span className="flex items-center gap-2">
                 <Brain className="w-4 h-4 text-purple-400" />
-                RAG REASONING RESPONSE
+                RAG REASONING RESPONSE {chatResponse.llm_provider ? `• ${chatResponse.llm_provider}` : ''}
               </span>
-              <span>Confidence: {Math.round((chatResponse.confidence || 0.95) * 100)}%</span>
+              <span>Confidence: {Math.round((chatResponse.confidence || chatResponse.confidence_score || 0.95) * 100)}%</span>
             </div>
-            <p className="text-slate-200 text-sm font-sans leading-relaxed pt-1">
-              {chatResponse.response}
+            <p className="text-slate-200 text-sm font-sans leading-relaxed pt-1 whitespace-pre-wrap">
+              {typeof chatResponse.response === 'string' ? chatResponse.response : JSON.stringify(chatResponse.response)}
             </p>
-            {chatResponse.causal_nodes && chatResponse.causal_nodes.length > 0 && (
+            {Array.isArray(chatResponse.causal_nodes) && chatResponse.causal_nodes.length > 0 && (
               <div className="pt-2 flex flex-wrap items-center gap-2 text-[11px]">
                 <span className="text-slate-400">Causal Graph Nodes:</span>
                 {chatResponse.causal_nodes.map((node, idx) => (
                   <span key={idx} className="px-2 py-0.5 rounded bg-slate-900 text-cyan-300 border border-slate-800">
-                    {node}
+                    {typeof node === 'string' ? node : node?.name || JSON.stringify(node)}
                   </span>
                 ))}
               </div>

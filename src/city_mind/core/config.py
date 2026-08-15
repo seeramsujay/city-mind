@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     # Google Gemini Free Tier AI Settings
     GEMINI_API_KEY: Optional[str] = None
-    GEMINI_MODEL: str = "gemini-1.5-flash"
+    GEMINI_MODEL: str = "gemini-3.1-flash-lite"
 
     QDRANT_URL: str = "http://localhost:6333"
     NEO4J_URI: str = "bolt://localhost:7687"

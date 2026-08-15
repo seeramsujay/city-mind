@@ -48,7 +48,7 @@ class GoogleGeminiService:
                 ]
             }
 
-            with httpx.Client(timeout=3.0) as client:
+            with httpx.Client(timeout=10.0) as client:
                 resp = client.post(url, json=payload)
                 if resp.status_code == 200:
                     data = resp.json()
