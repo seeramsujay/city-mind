@@ -6,6 +6,7 @@ Combines CockroachDB Distributed Vector Indexing, Causal Knowledge Graph, and Am
 from typing import Dict, Any, List, Optional
 from city_mind.ai.vector_store import vector_memory_store
 from city_mind.ai.knowledge_graph import knowledge_graph
+from city_mind.ai.gemini_service import gemini_service
 from city_mind.ai.bedrock_service import bedrock_service
 from city_mind.memory.commit_engine import commit_engine
 
@@ -34,17 +35,23 @@ class RAGEngine:
                 if chains:
                     causal_chains.extend(chains[:2])
 
-        # 3. Attempt Amazon Bedrock (Claude 3.5 Sonnet) RAG synthesis
+        # 3. Attempt Google Gemini (Free Tier) or Amazon Bedrock RAG synthesis
         context_list = [
             {"commit_hash": c.commit_hash, "zone_id": c.zone_id, "summary": c.ai_summary}
             for c in retrieved_commits
         ]
-        bedrock_response = bedrock_service.invoke_claude_rag_reasoning(user_prompt, context_list)
+        
+        gemini_response = gemini_service.generate_insight(user_prompt, context_list)
+        bedrock_response = None if gemini_response else bedrock_service.invoke_claude_rag_reasoning(user_prompt, context_list)
 
-        if bedrock_response:
-            response_text = f"[Powered by Amazon Bedrock - Claude 3.5 Sonnet & CockroachDB Vector Index]\n\n{bedrock_response}"
+        if gemini_response:
+            response_text = f"[Powered by Google Gemini 1.5 Flash Free Tier & CityMind Vector Index]\n\n{gemini_response}"
+            llm_provider = "Google Gemini 1.5 Flash (Free Tier)"
+        elif bedrock_response:
+            response_text = f"[Powered by Amazon Bedrock & CityMind Vector Index]\n\n{bedrock_response}"
+            llm_provider = "Amazon Bedrock (Claude 3.5 Sonnet)"
         else:
-            # Fallback deterministic RAG synthesis
+            # Fallback zero-cost deterministic RAG synthesis
             evidence_snippets = [
                 f"Commit {c.commit_hash[:7]} [{c.zone_id} | {c.domain.value}]: {c.ai_summary} (Confidence: {c.confidence})"
                 for c in retrieved_commits
@@ -62,6 +69,7 @@ class RAGEngine:
             )
             if causal_summary:
                 response_text += f"\n\n**Causal Analysis:**\n{causal_summary}"
+            llm_provider = "CityMind Deterministic Zero-Cost Pipeline"
 
         return {
             "query": user_prompt,
@@ -81,7 +89,7 @@ class RAGEngine:
             "causal_chains": causal_chains,
             "confidence_score": 0.94,
             "vector_store_type": "CockroachDB Distributed Vector Indexing",
-            "llm_provider": "Amazon Bedrock (Claude 3.5 Sonnet)" if bedrock_response else "CityMind RAG Pipeline"
+            "llm_provider": llm_provider
         }
 
 

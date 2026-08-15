@@ -20,7 +20,10 @@ class Settings(BaseSettings):
     MQTT_BROKER_PORT: int = 1883
     MQTT_TOPIC_PREFIX: str = "citymind/sensors"
 
-    OPENAI_API_KEY: Optional[str] = None
+    # Google Gemini Free Tier AI Settings
+    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-1.5-flash"
+
     QDRANT_URL: str = "http://localhost:6333"
     NEO4J_URI: str = "bolt://localhost:7687"
     NEO4J_USER: str = "neo4j"
@@ -32,6 +35,9 @@ class Settings(BaseSettings):
     COCKROACH_MCP_ENDPOINT: str = "https://cockroachlabs.cloud/mcp"
 
     # AWS Services (Amazon Bedrock & Amazon S3)
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_SESSION_TOKEN: Optional[str] = None
     AWS_REGION: str = "us-east-1"
     AWS_BEDROCK_MODEL_ID: str = "anthropic.claude-3-5-sonnet-20241022-v2:0"
     AWS_BEDROCK_EMBEDDING_MODEL_ID: str = "amazon.titan-embed-text-v1"
