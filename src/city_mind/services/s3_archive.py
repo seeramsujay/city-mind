@@ -19,10 +19,17 @@ class AmazonS3ArchiveService:
     def _init_client(self):
         try:
             import boto3
-            self._s3_client = boto3.client(
-                service_name="s3",
-                region_name=settings.AWS_REGION
-            )
+            if not settings.AWS_ACCESS_KEY_ID or settings.AWS_ACCESS_KEY_ID == "your_aws_access_key_id_here":
+                self.enabled = False
+                return
+
+            session_kwargs = {"region_name": settings.AWS_REGION}
+            session_kwargs["aws_access_key_id"] = settings.AWS_ACCESS_KEY_ID
+            session_kwargs["aws_secret_access_key"] = settings.AWS_SECRET_ACCESS_KEY
+            if settings.AWS_SESSION_TOKEN:
+                session_kwargs["aws_session_token"] = settings.AWS_SESSION_TOKEN
+
+            self._s3_client = boto3.client("s3", **session_kwargs)
             self.enabled = True
         except Exception:
             self.enabled = False
