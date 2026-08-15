@@ -5,13 +5,14 @@
 ### *A Git-Inspired AI Memory Operating System for Smart Cities*
 
 [![CockroachDB](https://img.shields.io/badge/CockroachDB-Vector_Indexing-6933FF?style=for-the-badge&logo=cockroachlabs&logoColor=white)](https://cockroachlabs.com)
-[![AWS Bedrock](https://img.shields.io/badge/AWS-Amazon_Bedrock-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com/bedrock/)
+[![AWS Forever Free](https://img.shields.io/badge/AWS-Forever_Free_Tier-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com/free/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-Free_Tier-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://aistudio.google.com/)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org)
 [![pnpm](https://img.shields.io/badge/pnpm-%234a4a4a.svg?style=for-the-badge&logo=pnpm&logoColor=f69220)](https://pnpm.io)
 
-[Architecture](#-system-architecture) • [CockroachDB & AWS Tooling](#-cockroachdb--aws-integrations) • [Key Innovations](#-the-paradigm-shift) • [Tech Stack](#-tech-stack) • [Quickstart](#-getting-started)
+[Architecture](#-system-architecture) • [CockroachDB & AWS Tooling](#-cockroachdb--aws-forever-free-integrations) • [Key Innovations](#-the-paradigm-shift) • [Tech Stack](#-tech-stack) • [Quickstart](#-getting-started)
 
 ---
 
@@ -27,9 +28,9 @@ This enables autonomous AI agents to query historical context, perform root-caus
 
 ---
 
-## 🛠️ CockroachDB & AWS Integrations
+## 🛠️ CockroachDB & AWS Forever Free Integrations
 
-CityMind integrates distributed enterprise cloud infrastructure using **CockroachDB** and **AWS Services**:
+CityMind integrates distributed enterprise cloud infrastructure using **CockroachDB Free Tier** and **AWS Forever Free Services**:
 
 ### 🪳 CockroachDB Ecosystem
 1. **CockroachDB Distributed Vector Indexing**:
@@ -40,11 +41,15 @@ CityMind integrates distributed enterprise cloud infrastructure using **Cockroac
 3. **ccloud CLI & CockroachDB Agent Skills**:
    - Executable agent skills (`.agents/skills/cockroachdb-management/SKILL.md`) for automated schema migrations and `ccloud` control plane administration.
 
-### ☁️ AWS Services
-1. **Amazon Bedrock**:
-   - Powers RAG reasoning and embedding generation using Bedrock Runtime (`anthropic.claude-3-5-sonnet` and `amazon.titan-embed-text-v1`).
-2. **Amazon S3**:
-   - Archives SHA-256 City Commit payloads and telemetry stream snapshots into persistent object storage (`citymind-event-memory-archive`).
+### ☁️ AWS Forever Free Services (100% Zero Cost Always Free)
+1. **Amazon DynamoDB (25 GB Storage, 25 WCU / 25 RCU Free Forever)**:
+   - High-throughput, zero-cost persistent archive for City Commit state diffs, incident hashes, and telemetry anomaly snapshots (handles up to 200M requests/month free).
+2. **Amazon SNS (1,000,000 Push Notifications / Month Free Forever)**:
+   - Publishes critical threshold alerts, flood warnings, and cross-sector mitigation directives to emergency responders.
+3. **Amazon S3 Object Archive & AWS Lambda**:
+   - Immutable snapshot storage and serverless webhook triggers under AWS Always Free limits.
+4. **Google Gemini Free Tier**:
+   - Zero-cost generative RAG insight synthesis and 384-dim semantic embeddings via Google AI Studio.
 
 ---
 
@@ -54,9 +59,10 @@ CityMind integrates distributed enterprise cloud infrastructure using **Cockroac
 | :--- | :--- | :--- |
 | **Data Strategy** | Continuous 24/7 raw sensor stream logging | **Event-Driven State Diffs** (*City Commits*) |
 | **Vector Indexing** | Isolated vector database silos | **CockroachDB Distributed Vector Indexing** |
-| **AI Reasoning** | Isolated, reactive single-event rules | **Amazon Bedrock (Claude 3.5 Sonnet) RAG** |
+| **AI Reasoning** | Isolated, reactive single-event rules | **Google Gemini Free Tier RAG Engine** |
 | **Historical Context** | Hard-to-query time-series databases | **Hierarchical AI Memory** (*Hot / Warm / Cold*) |
-| **Archive Storage** | Static local file dumps | **Amazon S3 Event Archive** |
+| **Event Archiving** | Static local file dumps | **Amazon DynamoDB & S3 Forever Free Archive** |
+| **Emergency Alerts**| Manual dispatcher emails | **Amazon SNS Always Free Topic Dispatch** |
 
 ---
 
@@ -78,18 +84,19 @@ CityMind integrates distributed enterprise cloud infrastructure using **Cockroac
                   └────────────────────┬────────────────────┘
                                        │ Immutable SHA-256 Commits
                                        ▼
-     ┌─────────────────────────────────┼─────────────────────────────────┐
-     ▼                                 ▼                                 ▼
+      ┌────────────────────────────────┼─────────────────────────────────┐
+      ▼                                ▼                                 ▼
 ┌───────────┐                    ┌───────────┐                     ┌───────────┐
-│Warm Memory│                    │ Amazon S3 │                     │CockroachDB│
-│ (Postgres)│                    │ (Archive) │                     │ (Vector)  │
+│Amazon     │                    │ Amazon SNS│                     │CockroachDB│
+│DynamoDB   │                    │ (1M Alert │                     │ (Vector   │
+│(25GB Free)│                    │  Dispatch)│                     │  Index)   │
 └─────┬─────┘                    └─────┬─────┘                     └─────┬─────┘
       │                                │                                 │
       └────────────────────────────────┼─────────────────────────────────┘
                                        ▼
                   ┌─────────────────────────────────────────┐
-                  │ Autonomous Multi-Agent Mesh & Bedrock   │
-                  │ (Amazon Bedrock RAG + Claude 3.5)       │
+                  │ Autonomous Multi-Agent Mesh & Gemini    │
+                  │ (Google Gemini Free Tier RAG Engine)    │
                   └────────────────────┬────────────────────┘
                                        │ Explainable Decisions & Actions
                                        ▼
@@ -109,26 +116,39 @@ CityMind integrates distributed enterprise cloud infrastructure using **Cockroac
 git clone https://github.com/seeramsujay/city-mind.git
 cd city-mind
 
-# Install backend dependencies via uv
-uv sync
+# Install backend dependencies with uv (or pip)
+uv venv
+source .venv/bin/activate
+uv pip install -e ".[dev]"
 
-# Install frontend dependencies via pnpm
+# Install frontend dependencies
 pnpm install
 ```
 
-### 2. Running Tests
+### 2. Configure Environment
+
+Copy `.env.example` to `.env` and provide your Google Gemini Free Tier API Key (from Google AI Studio) and optional AWS credentials.
 
 ```bash
-# Run backend Pytest suite (includes CockroachDB & AWS tests)
-uv run pytest
+cp .env.example .env
 ```
 
-### 3. Running Development Servers
+### 3. Run Development Servers
 
 ```bash
-# Terminal 1: Backend FastAPI Server
-uv run uvicorn city_mind.main:app --reload --port 8000
+# Start FastAPI backend (Port 8000)
+uv run uvicorn src.city_mind.main:app --reload --port 8000
 
-# Terminal 2: Frontend Vite Dev Server
+# In a separate terminal, start Vite frontend (Port 5173)
 pnpm run dev
+```
+
+---
+
+## 🧪 Testing
+
+Run comprehensive integration and unit tests:
+
+```bash
+uv run pytest
 ```

@@ -34,13 +34,14 @@ class Settings(BaseSettings):
     COCKROACH_VECTOR_DIMENSION: int = 384
     COCKROACH_MCP_ENDPOINT: str = "https://cockroachlabs.cloud/mcp"
 
-    # AWS Services (Amazon Bedrock & Amazon S3)
+    # AWS Forever Free Tier Services (DynamoDB 25GB Always Free, SNS 1M pushes/mo, SQS 1M req/mo, Lambda 1M/mo)
     AWS_ACCESS_KEY_ID: Optional[str] = None
     AWS_SECRET_ACCESS_KEY: Optional[str] = None
     AWS_SESSION_TOKEN: Optional[str] = None
     AWS_REGION: str = "us-east-1"
-    AWS_BEDROCK_MODEL_ID: str = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-    AWS_BEDROCK_EMBEDDING_MODEL_ID: str = "amazon.titan-embed-text-v1"
+    AWS_DYNAMODB_TABLE_NAME: str = "citymind-commits"
+    AWS_SNS_CRITICAL_ALERTS_TOPIC_ARN: Optional[str] = None
+    AWS_SQS_TELEMETRY_QUEUE_URL: Optional[str] = None
     AWS_S3_BUCKET_NAME: str = "citymind-event-memory-archive"
 
     model_config = SettingsConfigDict(
@@ -51,3 +52,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+

@@ -1,6 +1,6 @@
 """CityMind - Vector Memory Store & Embedding Pipeline.
 
-Integrates CockroachDB Distributed Vector Indexing and Amazon Bedrock Titan embeddings.
+Integrates CockroachDB Distributed Vector Indexing and Google Gemini Free Tier embeddings.
 """
 
 import math
@@ -9,7 +9,8 @@ from collections import Counter
 from typing import List, Dict, Any, Tuple, Optional
 from city_mind.models.commit import CityCommit
 from city_mind.ai.cockroach_vector_store import cockroach_vector_store
-from city_mind.ai.bedrock_service import bedrock_service
+from city_mind.ai.gemini_service import gemini_service
+from city_mind.services.dynamodb_archive import dynamodb_archive_service
 from city_mind.services.s3_archive import s3_archive_service
 
 
@@ -48,14 +49,18 @@ class VectorMemoryStore:
             f"Diffs: {' '.join([d.metric for d in commit.diffs])}"
         )
         
-        # Generate 384-dim dense embedding vector using Amazon Bedrock Titan
-        dense_embedding = bedrock_service.generate_embeddings(text_content)
+        # Generate 384-dim dense embedding vector using Google Gemini Free Tier / deterministic zero-cost
+        dense_embedding = gemini_service.generate_embeddings(text_content, dim=384)
         
         # 1. Index into CockroachDB Distributed Vector Indexing engine
         cockroach_indexed = cockroach_vector_store.index_commit(commit, dense_embedding)
 
-        # 2. Archive commit snapshot to Amazon S3 Object Archive
+        # 2. Archive commit snapshot to AWS DynamoDB (25GB Forever Free Tier)
+        dynamodb_archive_service.save_commit(commit)
+
+        # 3. Archive commit snapshot to Amazon S3 Object Archive
         s3_archive_service.archive_commit(commit)
+
 
         # 3. Maintain in-memory document store fallback
         vec = self._text_to_vector(text_content)
@@ -78,7 +83,7 @@ class VectorMemoryStore:
     def search(self, query: str, top_k: int = 5) -> List[Tuple[CityCommit, float]]:
         # Check CockroachDB Distributed Vector Indexing first if enabled
         if cockroach_vector_store.enabled:
-            query_embedding = bedrock_service.generate_embeddings(query)
+            query_embedding = gemini_service.generate_embeddings(query, dim=384)
             crdb_results = cockroach_vector_store.search_similar(query_embedding, top_k=top_k)
             if crdb_results:
                 matched_commits = []

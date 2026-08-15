@@ -1,13 +1,12 @@
 """CityMind - RAG Retrieval & AI Reasoning Engine.
 
-Combines CockroachDB Distributed Vector Indexing, Causal Knowledge Graph, and Amazon Bedrock reasoning.
+Combines CockroachDB Distributed Vector Indexing, Causal Knowledge Graph, and Google Gemini Free Tier AI reasoning.
 """
 
 from typing import Dict, Any, List, Optional
 from city_mind.ai.vector_store import vector_memory_store
 from city_mind.ai.knowledge_graph import knowledge_graph
 from city_mind.ai.gemini_service import gemini_service
-from city_mind.ai.bedrock_service import bedrock_service
 from city_mind.memory.commit_engine import commit_engine
 
 
@@ -35,23 +34,20 @@ class RAGEngine:
                 if chains:
                     causal_chains.extend(chains[:2])
 
-        # 3. Attempt Google Gemini (Free Tier) or Amazon Bedrock RAG synthesis
+        # 3. Attempt Google Gemini (Free Forever Tier) RAG synthesis
         context_list = [
             {"commit_hash": c.commit_hash, "zone_id": c.zone_id, "summary": c.ai_summary}
             for c in retrieved_commits
         ]
         
         gemini_response = gemini_service.generate_insight(user_prompt, context_list)
-        bedrock_response = None if gemini_response else bedrock_service.invoke_claude_rag_reasoning(user_prompt, context_list)
 
         if gemini_response:
-            response_text = f"[Powered by Google Gemini 1.5 Flash Free Tier & CityMind Vector Index]\n\n{gemini_response}"
-            llm_provider = "Google Gemini 1.5 Flash (Free Tier)"
-        elif bedrock_response:
-            response_text = f"[Powered by Amazon Bedrock & CityMind Vector Index]\n\n{bedrock_response}"
-            llm_provider = "Amazon Bedrock (Claude 3.5 Sonnet)"
+            response_text = f"[Powered by Google Gemini Free Tier & CityMind Vector Index]\n\n{gemini_response}"
+            llm_provider = "Google Gemini Free Tier"
         else:
             # Fallback zero-cost deterministic RAG synthesis
+
             evidence_snippets = [
                 f"Commit {c.commit_hash[:7]} [{c.zone_id} | {c.domain.value}]: {c.ai_summary} (Confidence: {c.confidence})"
                 for c in retrieved_commits
