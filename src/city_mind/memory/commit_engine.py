@@ -50,8 +50,8 @@ class CityCommitEngine:
     def create_commit(
         self,
         zone_id: str,
-        domain: DomainType,
-        trigger: TriggerType,
+        domain: Any,
+        trigger: Any,
         previous_state: Dict[str, Any],
         current_state: Dict[str, Any],
         sensor_evidence: Dict[str, Any],
@@ -59,6 +59,10 @@ class CityCommitEngine:
         confidence: float = 0.95,
         tags: Optional[List[str]] = None
     ) -> CityCommit:
+        # Coerce domain and trigger if passed as string
+        domain_enum = DomainType(domain) if isinstance(domain, str) else domain
+        trigger_enum = TriggerType(trigger) if isinstance(trigger, str) else trigger
+
         chain = self.zone_commit_chains.setdefault(zone_id, [])
         parent_hash = chain[-1] if chain else None
         
@@ -67,22 +71,22 @@ class CityCommitEngine:
         
         timestamp_dt = datetime.now(timezone.utc)
         timestamp_str = timestamp_dt.isoformat()
-        commit_hash = CityCommit.generate_hash(parent_hash, timestamp_str, zone_id, domain.value, diff_summary)
+        commit_hash = CityCommit.generate_hash(parent_hash, timestamp_str, zone_id, domain_enum.value, diff_summary)
         
         commit = CityCommit(
             commit_hash=commit_hash,
             parent_hash=parent_hash,
             timestamp=timestamp_dt,
             zone_id=zone_id,
-            domain=domain,
-            trigger=trigger,
+            domain=domain_enum,
+            trigger=trigger_enum,
             previous_state=previous_state,
             current_state=current_state,
             diffs=diffs,
             sensor_evidence=sensor_evidence,
             ai_summary=ai_summary,
             confidence=confidence,
-            tags=tags or [domain.value, trigger.value]
+            tags=tags or [domain_enum.value, trigger_enum.value]
         )
         
         self.commits_by_hash[commit_hash] = commit
