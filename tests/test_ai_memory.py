@@ -1,9 +1,8 @@
 """Unit tests for Vector Memory Store, Causal Knowledge Graph, and RAG Engine."""
 
-import pytest
-from city_mind.ai.vector_store import VectorMemoryStore
 from city_mind.ai.knowledge_graph import CausalKnowledgeGraph
 from city_mind.ai.rag_engine import RAGEngine
+from city_mind.ai.vector_store import VectorMemoryStore
 from city_mind.memory.commit_engine import commit_engine
 from city_mind.models.commit import TriggerType
 from city_mind.models.telemetry import DomainType
@@ -19,7 +18,7 @@ def test_vector_memory_store_indexing_and_search():
         current_state={"water_level_m": 2.8},
         sensor_evidence={"sensor_id": "env-101"},
         ai_summary="Severe flooding risk in Zone West river basin",
-        tags=["flood", "environment"]
+        tags=["flood", "environment"],
     )
 
     store.index_commit(commit)
@@ -47,7 +46,7 @@ def test_causal_knowledge_graph():
     # Test adding custom node & edge
     kg.add_node("DamOverflow", "Dam Overflow Event", "Event")
     kg.add_edge("FlashFlood", "RISKS", "DamOverflow")
-    
+
     full_graph = kg.get_full_graph()
     assert len(full_graph["nodes"]) >= 11
     assert any(e["target"] == "DamOverflow" for e in full_graph["edges"])

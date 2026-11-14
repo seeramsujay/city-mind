@@ -6,38 +6,41 @@ Integrates CockroachDB Distributed Vector Indexing and Google Gemini Free Tier e
 import math
 import re
 from collections import Counter
-from typing import List, Dict, Any, Tuple, Optional
-from city_mind.models.commit import CityCommit
+from typing import Any
+
 from city_mind.ai.cockroach_vector_store import cockroach_vector_store
 from city_mind.ai.gemini_service import gemini_service
+from city_mind.models.commit import CityCommit
 from city_mind.services.dynamodb_archive import dynamodb_archive_service
 from city_mind.services.s3_archive import s3_archive_service
 
 
-def simple_tokenize(text: str) -> List[str]:
+def simple_tokenize(text: str) -> list[str]:
     return re.findall(r"\w+", text.lower())
 
 
 class VectorMemoryStore:
     def __init__(self):
         # Stores local (commit_hash, text, vector, metadata)
-        self.documents: List[Dict[str, Any]] = []
+        self.documents: list[dict[str, Any]] = []
 
-    def _text_to_vector(self, text: str) -> Dict[str, float]:
+    def _text_to_vector(self, text: str) -> dict[str, float]:
         tokens = simple_tokenize(text)
         counts = Counter(tokens)
         total = len(tokens) or 1
         return {word: count / total for word, count in counts.items()}
 
-    def _cosine_similarity(self, vec1: Dict[str, float], vec2: Dict[str, float]) -> float:
+    def _cosine_similarity(
+        self, vec1: dict[str, float], vec2: dict[str, float]
+    ) -> float:
         intersection = set(vec1.keys()) & set(vec2.keys())
         if not intersection:
             return 0.0
-        
+
         dot_product = sum(vec1[w] * vec2[w] for w in intersection)
-        mag1 = math.sqrt(sum(v ** 2 for v in vec1.values()))
-        mag2 = math.sqrt(sum(v ** 2 for v in vec2.values()))
-        
+        mag1 = math.sqrt(sum(v**2 for v in vec1.values()))
+        mag2 = math.sqrt(sum(v**2 for v in vec2.values()))
+
         if mag1 == 0 or mag2 == 0:
             return 0.0
         return dot_product / (mag1 * mag2)
@@ -48,10 +51,10 @@ class VectorMemoryStore:
             f"Summary: {commit.ai_summary}. Tags: {' '.join(commit.tags)}. "
             f"Diffs: {' '.join([d.metric for d in commit.diffs])}"
         )
-        
+
         # Generate 384-dim dense embedding vector using Google Gemini Free Tier / deterministic zero-cost
         dense_embedding = gemini_service.generate_embeddings(text_content, dim=384)
-        
+
         # 1. Index into CockroachDB Distributed Vector Indexing engine
         cockroach_indexed = cockroach_vector_store.index_commit(commit, dense_embedding)
 
@@ -60,7 +63,6 @@ class VectorMemoryStore:
 
         # 3. Archive commit snapshot to Amazon S3 Object Archive
         s3_archive_service.archive_commit(commit)
-
 
         # 3. Maintain in-memory document store fallback
         vec = self._text_to_vector(text_content)
@@ -72,19 +74,23 @@ class VectorMemoryStore:
                 doc["commit"] = commit
                 return
 
-        self.documents.append({
-            "commit_hash": commit.commit_hash,
-            "text": text_content,
-            "vector": vec,
-            "dense_embedding": dense_embedding,
-            "commit": commit
-        })
+        self.documents.append(
+            {
+                "commit_hash": commit.commit_hash,
+                "text": text_content,
+                "vector": vec,
+                "dense_embedding": dense_embedding,
+                "commit": commit,
+            }
+        )
 
-    def search(self, query: str, top_k: int = 5) -> List[Tuple[CityCommit, float]]:
+    def search(self, query: str, top_k: int = 5) -> list[tuple[CityCommit, float]]:
         # Check CockroachDB Distributed Vector Indexing first if enabled
         if cockroach_vector_store.enabled:
             query_embedding = gemini_service.generate_embeddings(query, dim=384)
-            crdb_results = cockroach_vector_store.search_similar(query_embedding, top_k=top_k)
+            crdb_results = cockroach_vector_store.search_similar(
+                query_embedding, top_k=top_k
+            )
             if crdb_results:
                 matched_commits = []
                 for res_item, score in crdb_results:
@@ -107,7 +113,7 @@ class VectorMemoryStore:
             doc_tokens = set(simple_tokenize(doc["text"]))
             overlap = len(query_tokens & doc_tokens)
             boosted_score = min(1.0, score + (overlap * 0.1))
-            
+
             if boosted_score > 0.05:
                 scored.append((doc["commit"], round(boosted_score, 4)))
 

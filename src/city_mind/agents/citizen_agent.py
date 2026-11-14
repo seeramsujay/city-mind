@@ -1,10 +1,10 @@
 """CityMind - Autonomous Citizen Support Agent."""
 
 import uuid
-from typing import List, Optional
-from city_mind.models.agent import AgentRecommendation, ActionSeverity
-from city_mind.models.telemetry import DomainType, ZoneMetrics
+
 from city_mind.memory.commit_engine import commit_engine
+from city_mind.models.agent import ActionSeverity, AgentRecommendation
+from city_mind.models.telemetry import DomainType, ZoneMetrics
 
 
 class CitizenAgent:
@@ -12,7 +12,7 @@ class CitizenAgent:
         self.agent_name = "CitizenSupportAgent-v1"
         self.domain = DomainType.CITIZEN
 
-    def evaluate_zone(self, metrics: ZoneMetrics) -> Optional[AgentRecommendation]:
+    def evaluate_zone(self, metrics: ZoneMetrics) -> AgentRecommendation | None:
         zone_id = metrics.zone_id
         if metrics.active_incidents > 3 or metrics.status.value != "optimal":
             recent_commits = commit_engine.list_commits(zone_id=zone_id, limit=3)
@@ -27,7 +27,10 @@ class CitizenAgent:
                 supporting_commit_hashes=hashes,
                 confidence=0.93,
                 severity=ActionSeverity.LOW,
-                parameters={"tickets_grouped": 14, "notification_channel": "CityMind Mobile App Push"}
+                parameters={
+                    "tickets_grouped": 14,
+                    "notification_channel": "CityMind Mobile App Push",
+                },
             )
         return None
 

@@ -1,8 +1,9 @@
 """CityMind - Telemetry Data Models."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Dict, Any, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -28,8 +29,8 @@ class SensorReading(BaseModel):
     metric_name: str
     value: float
     unit: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    metadata: Optional[Dict[str, Any]] = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    metadata: dict[str, Any] | None = None
 
 
 class ZoneMetrics(BaseModel):
@@ -46,12 +47,11 @@ class ZoneMetrics(BaseModel):
     water_pressure_bar: float = 4.2
     waste_fill_pct: float = 30.0
     active_incidents: int = 0
-    last_updated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_updated: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class TelemetryStreamBatch(BaseModel):
     batch_id: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     readings_count: int
-    readings: List[SensorReading]
-
+    readings: list[SensorReading]

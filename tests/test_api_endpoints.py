@@ -1,8 +1,7 @@
 """Integration tests for CityMind FastAPI Endpoints and WebSockets using TestClient."""
 
-import pytest
-from fastapi.testclient import TestClient
 from city_mind.main import app
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
@@ -77,7 +76,10 @@ def test_commit_endpoints():
 
 def test_ai_router_endpoints():
     # 1. Chat endpoint
-    r_chat = client.post("/api/v1/ai/chat", json={"prompt": "Is there flood risk in West Basin?", "zone_id": "zone-west"})
+    r_chat = client.post(
+        "/api/v1/ai/chat",
+        json={"prompt": "Is there flood risk in West Basin?", "zone_id": "zone-west"},
+    )
     assert r_chat.status_code == 200
     chat_data = r_chat.json()
     assert "response" in chat_data
@@ -108,7 +110,9 @@ def test_prediction_router_endpoints():
     r_alerts = client.get("/api/v1/predictions/alerts")
     assert r_alerts.status_code == 200
 
-    r_forecast = client.get("/api/v1/predictions/forecast?domain=environment&zone_id=zone-west&horizon=4h")
+    r_forecast = client.get(
+        "/api/v1/predictions/forecast?domain=environment&zone_id=zone-west&horizon=4h"
+    )
     assert r_forecast.status_code == 200
     assert r_forecast.json()["domain"] == "environment"
 
@@ -117,11 +121,14 @@ def test_digital_twin_router_endpoints():
     r_state = client.get("/api/v1/digital-twin/state")
     assert r_state.status_code == 200
 
-    r_sim = client.post("/api/v1/digital-twin/simulate", json={
-        "scenario_type": "flash_flood",
-        "target_zone_id": "zone-west",
-        "intensity": 1.2
-    })
+    r_sim = client.post(
+        "/api/v1/digital-twin/simulate",
+        json={
+            "scenario_type": "flash_flood",
+            "target_zone_id": "zone-west",
+            "intensity": 1.2,
+        },
+    )
     assert r_sim.status_code == 200
     assert r_sim.json()["scenario_type"] == "flash_flood"
 

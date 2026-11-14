@@ -1,16 +1,14 @@
 """Unit tests for Telemetry Service, Hot Memory, and Threshold Engine."""
 
-from datetime import datetime, timezone
-import pytest
-from city_mind.models.telemetry import SensorReading, DomainType, ZoneStatus
-from city_mind.services.telemetry_service import TelemetryService
 from city_mind.memory.threshold_engine import ThresholdEngine
 from city_mind.models.commit import TriggerType
+from city_mind.models.telemetry import DomainType, SensorReading, ZoneStatus
+from city_mind.services.telemetry_service import TelemetryService
 
 
 def test_telemetry_service_ingest_and_zone_status():
     service = TelemetryService()
-    
+
     # 1. Ingest normal traffic speed
     r1 = SensorReading(
         sensor_id="s-trf-1",
@@ -18,7 +16,7 @@ def test_telemetry_service_ingest_and_zone_status():
         domain=DomainType.TRAFFIC,
         metric_name="traffic_speed_kmh",
         value=48.0,
-        unit="km/h"
+        unit="km/h",
     )
     m1 = service.ingest_reading(r1)
     assert m1.traffic_speed_kmh == 48.0
@@ -31,7 +29,7 @@ def test_telemetry_service_ingest_and_zone_status():
         domain=DomainType.ENVIRONMENT,
         metric_name="water_level_m",
         value=2.1,
-        unit="m"
+        unit="m",
     )
     m2 = service.ingest_reading(r2)
     assert m2.water_level_m == 2.1
@@ -44,7 +42,7 @@ def test_telemetry_service_ingest_and_zone_status():
         domain=DomainType.TRAFFIC,
         metric_name="traffic_speed_kmh",
         value=8.0,
-        unit="km/h"
+        unit="km/h",
     )
     m3 = service.ingest_reading(r3)
     assert m3.status == ZoneStatus.CRITICAL
@@ -61,7 +59,7 @@ def test_hot_memory_buffer_capacity():
             domain=DomainType.ENVIRONMENT,
             metric_name="aqi",
             value=50.0 + i,
-            unit="AQI"
+            unit="AQI",
         )
         service.ingest_reading(reading)
 
@@ -79,7 +77,7 @@ def test_threshold_engine_evaluations():
         domain=DomainType.ENVIRONMENT,
         metric_name="water_level_m",
         value=2.9,
-        unit="m"
+        unit="m",
     )
     triggered, trigger_type, msg = engine.evaluate(reading, previous_value=1.5)
     assert triggered is True
@@ -93,9 +91,11 @@ def test_threshold_engine_evaluations():
         domain=DomainType.ENVIRONMENT,
         metric_name="aqi",
         value=120.0,
-        unit="AQI"
+        unit="AQI",
     )
-    triggered_anom, trigger_type_anom, msg_anom = engine.evaluate(anomaly_reading, previous_value=50.0)
+    triggered_anom, trigger_type_anom, msg_anom = engine.evaluate(
+        anomaly_reading, previous_value=50.0
+    )
     assert triggered_anom is True
     assert trigger_type_anom == TriggerType.ANOMALY_DETECTED
     assert "ANOMALY" in msg_anom

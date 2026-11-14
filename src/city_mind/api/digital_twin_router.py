@@ -1,10 +1,9 @@
 """CityMind - Digital Twin & Simulator API Router."""
 
-from typing import Dict, Any, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel
-from city_mind.digital_twin.simulator import digital_twin_simulator
 
+from city_mind.digital_twin.simulator import digital_twin_simulator
 
 router = APIRouter(prefix="/api/v1/digital-twin", tags=["Digital Twin"])
 
@@ -27,5 +26,5 @@ async def run_simulation(request: SimulationRequest):
     return digital_twin_simulator.simulate_scenario(
         scenario_type=request.scenario_type,
         target_zone_id=request.target_zone_id,
-        intensity=request.intensity
+        intensity=request.intensity,
     )

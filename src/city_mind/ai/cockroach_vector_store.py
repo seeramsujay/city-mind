@@ -4,7 +4,8 @@ Stores and queries embeddings using CockroachDB's distributed vector support wit
 """
 
 import json
-from typing import List, Dict, Any, Tuple, Optional
+from typing import Any
+
 from city_mind.core.config import settings
 from city_mind.models.commit import CityCommit
 
@@ -18,9 +19,10 @@ class CockroachVectorStoreEngine:
     def _init_db(self):
         try:
             import psycopg2
+
             conn = psycopg2.connect(settings.COCKROACH_DATABASE_URL, connect_timeout=3)
             cursor = conn.cursor()
-            
+
             # Initialize CockroachDB Distributed Vector Table & Vector Index
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS city_commit_vectors (
@@ -34,11 +36,11 @@ class CockroachVectorStoreEngine:
                     metadata JSONB
                 );
             """)
-            
+
             # Attempt to create CockroachDB VECTOR INDEX if supported
             try:
                 cursor.execute("""
-                    CREATE VECTOR INDEX IF NOT EXISTS idx_city_commit_vector 
+                    CREATE VECTOR INDEX IF NOT EXISTS idx_city_commit_vector
                     ON city_commit_vectors (vector_embedding L2DISTANCE);
                 """)
             except Exception:
@@ -48,40 +50,46 @@ class CockroachVectorStoreEngine:
             cursor.close()
             conn.close()
             self.enabled = True
-        except Exception as e:
+        except Exception:
             # Graceful fallback when CockroachDB instance is not active
             self.enabled = False
 
-    def index_commit(self, commit: CityCommit, embedding: List[float]) -> bool:
+    def index_commit(self, commit: CityCommit, embedding: list[float]) -> bool:
         if not self.enabled:
             return False
 
         try:
             import psycopg2
+
             conn = psycopg2.connect(settings.COCKROACH_DATABASE_URL, connect_timeout=3)
             cursor = conn.cursor()
 
             vector_str = f"[{','.join(map(str, embedding))}]"
-            metadata_json = json.dumps({
-                "confidence": commit.confidence,
-                "tags": commit.tags,
-                "diffs_count": len(commit.diffs)
-            })
+            metadata_json = json.dumps(
+                {
+                    "confidence": commit.confidence,
+                    "tags": commit.tags,
+                    "diffs_count": len(commit.diffs),
+                }
+            )
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO city_commit_vectors (commit_hash, zone_id, domain, trigger_type, ai_summary, vector_embedding, metadata)
                 VALUES (%s, %s, %s, %s, %s, %s::vector, %s)
-                ON CONFLICT (commit_hash) DO UPDATE 
+                ON CONFLICT (commit_hash) DO UPDATE
                 SET ai_summary = EXCLUDED.ai_summary, vector_embedding = EXCLUDED.vector_embedding;
-            """, (
-                commit.commit_hash,
-                commit.zone_id,
-                commit.domain.value,
-                commit.trigger.value,
-                commit.ai_summary,
-                vector_str,
-                metadata_json
-            ))
+            """,
+                (
+                    commit.commit_hash,
+                    commit.zone_id,
+                    commit.domain.value,
+                    commit.trigger.value,
+                    commit.ai_summary,
+                    vector_str,
+                    metadata_json,
+                ),
+            )
 
             conn.commit()
             cursor.close()
@@ -90,25 +98,31 @@ class CockroachVectorStoreEngine:
         except Exception:
             return False
 
-    def search_similar(self, query_embedding: List[float], top_k: int = 5) -> List[Tuple[Dict[str, Any], float]]:
+    def search_similar(
+        self, query_embedding: list[float], top_k: int = 5
+    ) -> list[tuple[dict[str, Any], float]]:
         if not self.enabled:
             return []
 
         try:
             import psycopg2
+
             conn = psycopg2.connect(settings.COCKROACH_DATABASE_URL, connect_timeout=3)
             cursor = conn.cursor()
 
             vector_str = f"[{','.join(map(str, query_embedding))}]"
-            
+
             # CockroachDB Distributed Vector Indexing Cosine / L2 distance query
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT commit_hash, zone_id, domain, ai_summary, metadata,
                        (1.0 - (vector_embedding <=> %s::vector)) AS similarity
                 FROM city_commit_vectors
                 ORDER BY vector_embedding <=> %s::vector ASC
                 LIMIT %s;
-            """, (vector_str, vector_str, top_k))
+            """,
+                (vector_str, vector_str, top_k),
+            )
 
             rows = cursor.fetchall()
             cursor.close()
@@ -116,13 +130,18 @@ class CockroachVectorStoreEngine:
 
             results = []
             for r in rows:
-                results.append(({
-                    "commit_hash": r[0],
-                    "zone_id": r[1],
-                    "domain": r[2],
-                    "ai_summary": r[3],
-                    "metadata": r[4]
-                }, float(r[5])))
+                results.append(
+                    (
+                        {
+                            "commit_hash": r[0],
+                            "zone_id": r[1],
+                            "domain": r[2],
+                            "ai_summary": r[3],
+                            "metadata": r[4],
+                        },
+                        float(r[5]),
+                    )
+                )
 
             return results
         except Exception:

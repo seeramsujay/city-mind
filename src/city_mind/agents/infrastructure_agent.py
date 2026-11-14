@@ -1,10 +1,10 @@
 """CityMind - Autonomous Infrastructure Agent."""
 
 import uuid
-from typing import List, Optional
-from city_mind.models.agent import AgentRecommendation, ActionSeverity
-from city_mind.models.telemetry import DomainType, ZoneMetrics
+
 from city_mind.memory.commit_engine import commit_engine
+from city_mind.models.agent import ActionSeverity, AgentRecommendation
+from city_mind.models.telemetry import DomainType, ZoneMetrics
 
 
 class InfrastructureAgent:
@@ -12,13 +12,15 @@ class InfrastructureAgent:
         self.agent_name = "InfrastructureAgent-v1"
         self.domain = DomainType.INFRASTRUCTURE
 
-    def evaluate_zone(self, metrics: ZoneMetrics) -> Optional[AgentRecommendation]:
+    def evaluate_zone(self, metrics: ZoneMetrics) -> AgentRecommendation | None:
         grid_load = metrics.power_grid_load_pct
         waste_fill = metrics.waste_fill_pct
         zone_id = metrics.zone_id
 
         if grid_load > 85.0:
-            recent_commits = commit_engine.list_commits(zone_id=zone_id, domain=self.domain, limit=3)
+            recent_commits = commit_engine.list_commits(
+                zone_id=zone_id, domain=self.domain, limit=3
+            )
             hashes = [c.commit_hash for c in recent_commits]
             return AgentRecommendation(
                 recommendation_id=f"rec-inf-{uuid.uuid4().hex[:8]}",
@@ -30,10 +32,15 @@ class InfrastructureAgent:
                 supporting_commit_hashes=hashes,
                 confidence=0.95,
                 severity=ActionSeverity.HIGH,
-                parameters={"load_shedding_target_mw": 12.5, "reserve_battery_id": "BATT-ZONE-A"}
+                parameters={
+                    "load_shedding_target_mw": 12.5,
+                    "reserve_battery_id": "BATT-ZONE-A",
+                },
             )
         elif waste_fill > 80.0:
-            recent_commits = commit_engine.list_commits(zone_id=zone_id, domain=self.domain, limit=3)
+            recent_commits = commit_engine.list_commits(
+                zone_id=zone_id, domain=self.domain, limit=3
+            )
             hashes = [c.commit_hash for c in recent_commits]
             return AgentRecommendation(
                 recommendation_id=f"rec-inf-{uuid.uuid4().hex[:8]}",
@@ -45,7 +52,7 @@ class InfrastructureAgent:
                 supporting_commit_hashes=hashes,
                 confidence=0.91,
                 severity=ActionSeverity.MEDIUM,
-                parameters={"truck_unit": "TRUCK-4", "bin_cluster": "Cluster-West"}
+                parameters={"truck_unit": "TRUCK-4", "bin_cluster": "Cluster-West"},
             )
         return None
 

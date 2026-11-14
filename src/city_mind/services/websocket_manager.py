@@ -1,13 +1,14 @@
 """CityMind - Real-time WebSocket Manager."""
 
 import json
-from typing import List, Dict, Any
+from typing import Any
+
 from fastapi import WebSocket
 
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
+        self.active_connections: list[WebSocket] = []
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -17,7 +18,7 @@ class ConnectionManager:
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
 
-    async def broadcast(self, message: Dict[str, Any]):
+    async def broadcast(self, message: dict[str, Any]):
         message_str = json.dumps(message, default=str)
         disconnected = []
         for connection in self.active_connections:
@@ -25,7 +26,7 @@ class ConnectionManager:
                 await connection.send_text(message_str)
             except Exception:
                 disconnected.append(connection)
-        
+
         for conn in disconnected:
             self.disconnect(conn)
 

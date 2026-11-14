@@ -1,10 +1,9 @@
 """Unit tests for Git-inspired City Commit Engine and Delta Logger."""
 
-import pytest
-from city_mind.models.commit import TriggerType
-from city_mind.models.telemetry import DomainType
 from city_mind.memory.commit_engine import CityCommitEngine
 from city_mind.memory.delta_logger import DeltaLogger
+from city_mind.models.commit import TriggerType
+from city_mind.models.telemetry import DomainType
 
 
 def test_genesis_commits():
@@ -31,7 +30,7 @@ def test_create_commit_chain_and_diffs():
         current_state={"water_level_m": 2.5, "status": "warning"},
         sensor_evidence={"sensor": "river-gauge-1", "value": 2.5},
         ai_summary="River level rose to warning threshold 2.5m",
-        confidence=0.97
+        confidence=0.97,
     )
 
     assert c1.parent_hash == parent_hash
@@ -46,7 +45,7 @@ def test_create_commit_chain_and_diffs():
         current_state={"water_level_m": 3.1, "status": "critical"},
         sensor_evidence={"sensor": "river-gauge-1", "value": 3.1},
         ai_summary="River level reached critical threshold 3.1m",
-        confidence=0.99
+        confidence=0.99,
     )
 
     assert c2.parent_hash == c1.commit_hash
