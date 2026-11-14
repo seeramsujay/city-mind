@@ -40,7 +40,7 @@ class CockroachVectorStoreEngine:
             # Attempt to create CockroachDB VECTOR INDEX if supported
             try:
                 cursor.execute("""
-                    CREATE VECTOR INDEX IF NOT EXISTS idx_city_commit_vector 
+                    CREATE VECTOR INDEX IF NOT EXISTS idx_city_commit_vector
                     ON city_commit_vectors (vector_embedding L2DISTANCE);
                 """)
             except Exception:
@@ -77,7 +77,7 @@ class CockroachVectorStoreEngine:
                 """
                 INSERT INTO city_commit_vectors (commit_hash, zone_id, domain, trigger_type, ai_summary, vector_embedding, metadata)
                 VALUES (%s, %s, %s, %s, %s, %s::vector, %s)
-                ON CONFLICT (commit_hash) DO UPDATE 
+                ON CONFLICT (commit_hash) DO UPDATE
                 SET ai_summary = EXCLUDED.ai_summary, vector_embedding = EXCLUDED.vector_embedding;
             """,
                 (
