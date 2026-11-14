@@ -1,9 +1,11 @@
 """CityMind - Autonomous Multi-Agent Models."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Dict, Any, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
+
 from city_mind.models.telemetry import DomainType
 
 
@@ -29,22 +31,21 @@ class AgentRecommendation(BaseModel):
     zone_id: str
     action: str
     reasoning: str
-    supporting_commit_hashes: List[str]
+    supporting_commit_hashes: list[str]
     confidence: float
     severity: ActionSeverity
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    parameters: Dict[str, Any] = Field(default_factory=dict)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    parameters: dict[str, Any] = Field(default_factory=dict)
 
 
 class MultiAgentDecision(BaseModel):
     decision_id: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    participating_agents: List[str]
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    participating_agents: list[str]
     primary_domain: DomainType
     zone_id: str
     consensus_action: str
-    coordinated_steps: List[str]
-    evidence_commits: List[str]
+    coordinated_steps: list[str]
+    evidence_commits: list[str]
     risk_level: ActionSeverity
     confidence_score: float
-

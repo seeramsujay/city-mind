@@ -2,13 +2,13 @@
 
 import math
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import List, Dict, Any, Optional
+from datetime import UTC, datetime, timedelta
+
 from city_mind.models.prediction import (
-    PredictiveAlert,
     DomainForecast,
+    ForecastHorizon,
+    PredictiveAlert,
     TimeSeriesForecastPoint,
-    ForecastHorizon
 )
 from city_mind.services.telemetry_service import telemetry_service
 
@@ -17,7 +17,7 @@ class ForecastEngine:
     def __init__(self):
         pass
 
-    def generate_alerts(self) -> List[PredictiveAlert]:
+    def generate_alerts(self) -> list[PredictiveAlert]:
         zones = telemetry_service.get_all_zones()
         alerts = []
 
@@ -35,10 +35,10 @@ class ForecastEngine:
                         details=f"Precipitation accumulation and river level trending upward ({z.water_level_m}m). Risk of localized flash flooding in low-lying sectors.",
                         lat=12.9716,
                         lng=77.5946,
-                        recommended_mitigation="Pre-activate auxiliary drainage pumps and deploy sandbags along West Basin riverbank."
+                        recommended_mitigation="Pre-activate auxiliary drainage pumps and deploy sandbags along West Basin riverbank.",
                     )
                 )
-            
+
             # Traffic congestion alert
             if z.traffic_speed_kmh < 22.0:
                 alerts.append(
@@ -52,14 +52,19 @@ class ForecastEngine:
                         details=f"Traffic velocity reduced to {z.traffic_speed_kmh} km/h. Bottleneck forming near central arterial junction.",
                         lat=12.9816,
                         lng=77.6046,
-                        recommended_mitigation="Extend green light duration by 35 seconds on North-South corridor and issue dynamic GPS rerouting advisories."
+                        recommended_mitigation="Extend green light duration by 35 seconds on North-South corridor and issue dynamic GPS rerouting advisories.",
                     )
                 )
 
         return alerts
 
-    def get_domain_forecast(self, domain: str, zone_id: str, horizon: ForecastHorizon = ForecastHorizon.FOUR_HOURS) -> DomainForecast:
-        now = datetime.now(timezone.utc)
+    def get_domain_forecast(
+        self,
+        domain: str,
+        zone_id: str,
+        horizon: ForecastHorizon = ForecastHorizon.FOUR_HOURS,
+    ) -> DomainForecast:
+        now = datetime.now(UTC)
         points_count = 12 if horizon == ForecastHorizon.FOUR_HOURS else 24
         interval_minutes = 20 if horizon == ForecastHorizon.FOUR_HOURS else 60
 
@@ -86,7 +91,7 @@ class ForecastEngine:
                     timestamp=t,
                     predicted_value=val,
                     lower_bound=round(max(0.0, val - margin), 2),
-                    upper_bound=round(val + margin, 2)
+                    upper_bound=round(val + margin, 2),
                 )
             )
 
@@ -94,10 +99,14 @@ class ForecastEngine:
             domain=domain,
             zone_id=zone_id,
             horizon=horizon,
-            metric_name="water_level_m" if domain == "environment" else ("speed_kmh" if domain == "traffic" else "load_pct"),
+            metric_name=(
+                "water_level_m"
+                if domain == "environment"
+                else ("speed_kmh" if domain == "traffic" else "load_pct")
+            ),
             forecast_points=points,
             risk_assessment=f"Predictive model indicates stable trend with 92% confidence over {horizon.value} window.",
-            confidence=0.92
+            confidence=0.92,
         )
 
 

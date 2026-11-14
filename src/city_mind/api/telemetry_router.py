@@ -1,16 +1,15 @@
 """CityMind - Telemetry & WebSocket API Router."""
 
-from typing import List, Optional
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, HTTPException
-from city_mind.models.telemetry import ZoneMetrics, SensorReading
+from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
+
+from city_mind.models.telemetry import SensorReading, ZoneMetrics
 from city_mind.services.telemetry_service import telemetry_service
 from city_mind.services.websocket_manager import ws_manager
-
 
 router = APIRouter(prefix="/api/v1/telemetry", tags=["Telemetry & Hot Memory"])
 
 
-@router.get("/zones", response_model=List[ZoneMetrics])
+@router.get("/zones", response_model=list[ZoneMetrics])
 async def get_all_zones():
     """Get real-time metrics for all smart city zones."""
     return telemetry_service.get_all_zones()
@@ -25,7 +24,7 @@ async def get_zone(zone_id: str):
     return metrics
 
 
-@router.get("/hot-memory/{zone_id}", response_model=List[SensorReading])
+@router.get("/hot-memory/{zone_id}", response_model=list[SensorReading])
 async def get_hot_memory(zone_id: str, limit: int = Query(default=50, le=200)):
     """Retrieve recent sliding-window sensor readings from Hot Memory buffer."""
     return telemetry_service.get_hot_memory_readings(zone_id, limit=limit)

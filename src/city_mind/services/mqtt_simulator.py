@@ -2,17 +2,16 @@
 
 import asyncio
 import random
-import uuid
-from datetime import datetime
-from typing import Callable, Optional
-from city_mind.models.telemetry import SensorReading, DomainType
-from city_mind.services.telemetry_service import telemetry_service, ZONES
+from collections.abc import Callable
+
+from city_mind.models.telemetry import DomainType, SensorReading
+from city_mind.services.telemetry_service import ZONES, telemetry_service
 
 
 class MQTTSimulator:
     def __init__(self):
         self.is_running = False
-        self._task: Optional[asyncio.Task] = None
+        self._task: asyncio.Task | None = None
         self.listeners: list[Callable] = []
 
     def register_listener(self, callback: Callable):
@@ -35,7 +34,7 @@ class MQTTSimulator:
 
     async def _simulation_loop(self):
         zone_ids = list(ZONES.keys())
-        
+
         # Initial base values with minor fluctuations
         zone_baselines = {
             z: {
@@ -53,23 +52,43 @@ class MQTTSimulator:
         while self.is_running:
             for zone_id in zone_ids:
                 base = zone_baselines[zone_id]
-                
+
                 # Introduce occasional realistic spikes / anomalies (5% chance)
                 spike = random.random() < 0.05
-                
+
                 if spike and zone_id == "zone-west":
                     # Simulate heavy rain/rising river in Zone West
                     base["water_level_m"] = min(3.5, base["water_level_m"] + 0.4)
                 elif spike and zone_id == "zone-downtown":
                     # Simulate traffic bottleneck downtown
-                    base["traffic_speed_kmh"] = max(5.0, base["traffic_speed_kmh"] - 8.0)
+                    base["traffic_speed_kmh"] = max(
+                        5.0, base["traffic_speed_kmh"] - 8.0
+                    )
                 else:
                     # Normal drift towards baseline
-                    base["traffic_speed_kmh"] = max(10.0, min(65.0, base["traffic_speed_kmh"] + random.uniform(-2.0, 2.0)))
-                    base["water_level_m"] = max(0.5, min(3.2, base["water_level_m"] + random.uniform(-0.05, 0.05)))
-                    base["aqi"] = max(20.0, min(300.0, base["aqi"] + random.uniform(-3.0, 3.0)))
-                    base["noise_db"] = max(40.0, min(90.0, base["noise_db"] + random.uniform(-2.0, 2.0)))
-                    base["power_grid_load_pct"] = max(30.0, min(95.0, base["power_grid_load_pct"] + random.uniform(-1.5, 1.5)))
+                    base["traffic_speed_kmh"] = max(
+                        10.0,
+                        min(
+                            65.0, base["traffic_speed_kmh"] + random.uniform(-2.0, 2.0)
+                        ),
+                    )
+                    base["water_level_m"] = max(
+                        0.5,
+                        min(3.2, base["water_level_m"] + random.uniform(-0.05, 0.05)),
+                    )
+                    base["aqi"] = max(
+                        20.0, min(300.0, base["aqi"] + random.uniform(-3.0, 3.0))
+                    )
+                    base["noise_db"] = max(
+                        40.0, min(90.0, base["noise_db"] + random.uniform(-2.0, 2.0))
+                    )
+                    base["power_grid_load_pct"] = max(
+                        30.0,
+                        min(
+                            95.0,
+                            base["power_grid_load_pct"] + random.uniform(-1.5, 1.5),
+                        ),
+                    )
 
                 # Create SensorReadings for domain metrics
                 readings = [
@@ -79,7 +98,7 @@ class MQTTSimulator:
                         domain=DomainType.TRAFFIC,
                         metric_name="traffic_speed_kmh",
                         value=round(base["traffic_speed_kmh"], 2),
-                        unit="km/h"
+                        unit="km/h",
                     ),
                     SensorReading(
                         sensor_id=f"sensor-env-{zone_id}",
@@ -87,7 +106,7 @@ class MQTTSimulator:
                         domain=DomainType.ENVIRONMENT,
                         metric_name="water_level_m",
                         value=round(base["water_level_m"], 2),
-                        unit="m"
+                        unit="m",
                     ),
                     SensorReading(
                         sensor_id=f"sensor-aqi-{zone_id}",
@@ -95,7 +114,7 @@ class MQTTSimulator:
                         domain=DomainType.ENVIRONMENT,
                         metric_name="aqi",
                         value=round(base["aqi"], 1),
-                        unit="AQI"
+                        unit="AQI",
                     ),
                     SensorReading(
                         sensor_id=f"sensor-pwr-{zone_id}",
@@ -103,8 +122,8 @@ class MQTTSimulator:
                         domain=DomainType.INFRASTRUCTURE,
                         metric_name="power_grid_load_pct",
                         value=round(base["power_grid_load_pct"], 1),
-                        unit="%"
-                    )
+                        unit="%",
+                    ),
                 ]
 
                 for reading in readings:

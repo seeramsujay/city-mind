@@ -1,18 +1,14 @@
 """Comprehensive Test Suite for CityMind Backend Engine across all 6 Roadmap Phases."""
 
-import asyncio
-from datetime import datetime
-from city_mind.models.telemetry import SensorReading, DomainType
-from city_mind.models.commit import TriggerType
-from city_mind.services.telemetry_service import telemetry_service
-from city_mind.memory.threshold_engine import threshold_engine
-from city_mind.memory.commit_engine import commit_engine
-from city_mind.ai.vector_store import vector_memory_store
-from city_mind.ai.knowledge_graph import knowledge_graph
-from city_mind.ai.rag_engine import rag_engine
 from city_mind.agents.agent_mesh import agent_mesh
-from city_mind.predictions.forecast_engine import forecast_engine
+from city_mind.ai.rag_engine import rag_engine
+from city_mind.ai.vector_store import vector_memory_store
 from city_mind.digital_twin.simulator import digital_twin_simulator
+from city_mind.memory.commit_engine import commit_engine
+from city_mind.models.commit import TriggerType
+from city_mind.models.telemetry import DomainType, SensorReading
+from city_mind.predictions.forecast_engine import forecast_engine
+from city_mind.services.telemetry_service import telemetry_service
 
 
 def test_phase1_telemetry_and_hot_memory():
@@ -22,7 +18,7 @@ def test_phase1_telemetry_and_hot_memory():
         domain=DomainType.ENVIRONMENT,
         metric_name="water_level_m",
         value=2.6,
-        unit="m"
+        unit="m",
     )
     zone_metrics = telemetry_service.ingest_reading(reading)
     assert zone_metrics.zone_id == "zone-west"
@@ -34,7 +30,7 @@ def test_phase1_telemetry_and_hot_memory():
 def test_phase2_commit_engine_and_diffs():
     previous_state = {"water_level_m": 1.2, "status": "optimal"}
     current_state = {"water_level_m": 2.8, "status": "critical"}
-    
+
     commit = commit_engine.create_commit(
         zone_id="zone-west",
         domain=DomainType.ENVIRONMENT,
@@ -44,12 +40,12 @@ def test_phase2_commit_engine_and_diffs():
         sensor_evidence={"sensor_id": "test-sensor-1", "value": 2.8},
         ai_summary="CRITICAL: Water level reached 2.8m in West Basin",
         confidence=0.98,
-        tags=["environment", "flood_alert"]
+        tags=["environment", "flood_alert"],
     )
     assert commit.commit_hash is not None
     assert len(commit.commit_hash) == 16
     assert commit.parent_hash is not None
-    
+
     # Test diff
     diff_res = commit_engine.diff_commits(commit.parent_hash, commit.commit_hash)
     assert diff_res is not None
@@ -87,8 +83,10 @@ def test_phase5_predictive_intelligence():
 def test_phase6_digital_twin_simulation():
     twin_state = digital_twin_simulator.get_digital_twin_state()
     assert twin_state["total_zones"] > 0
-    
-    sim_res = digital_twin_simulator.simulate_scenario("flash_flood", "zone-west", intensity=1.5)
+
+    sim_res = digital_twin_simulator.simulate_scenario(
+        "flash_flood", "zone-west", intensity=1.5
+    )
     assert sim_res["resilience_score"] <= 1.0
     assert len(sim_res["policy_recommendations"]) > 0
     print("[PASS] Phase 6 - Digital Twin & What-If Scenario Simulator")

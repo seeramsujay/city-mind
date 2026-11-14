@@ -1,10 +1,12 @@
 """CityMind - Git-Inspired City Commit Models."""
 
 import hashlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Dict, Any, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
+
 from city_mind.models.telemetry import DomainType
 
 
@@ -21,27 +23,33 @@ class StateDiff(BaseModel):
     metric: str
     previous_value: Any
     current_value: Any
-    delta: Optional[float] = None
-    unit: Optional[str] = None
+    delta: float | None = None
+    unit: str | None = None
 
 
 class CityCommit(BaseModel):
     commit_hash: str
-    parent_hash: Optional[str] = None
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    parent_hash: str | None = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     zone_id: str
     domain: DomainType
     trigger: TriggerType
-    previous_state: Dict[str, Any]
-    current_state: Dict[str, Any]
-    diffs: List[StateDiff]
-    sensor_evidence: Dict[str, Any]
+    previous_state: dict[str, Any]
+    current_state: dict[str, Any]
+    diffs: list[StateDiff]
+    sensor_evidence: dict[str, Any]
     ai_summary: str
     confidence: float = Field(ge=0.0, le=1.0, default=0.95)
-    tags: List[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
 
     @staticmethod
-    def generate_hash(parent_hash: Optional[str], timestamp_str: str, zone_id: str, domain: str, diffs_summary: str) -> str:
+    def generate_hash(
+        parent_hash: str | None,
+        timestamp_str: str,
+        zone_id: str,
+        domain: str,
+        diffs_summary: str,
+    ) -> str:
         raw_str = f"{parent_hash or 'GENESIS'}:{timestamp_str}:{zone_id}:{domain}:{diffs_summary}"
         return hashlib.sha256(raw_str.encode("utf-8")).hexdigest()[:16]
 
@@ -49,8 +57,8 @@ class CityCommit(BaseModel):
 class CommitTimeline(BaseModel):
     zone_id: str
     total_commits: int
-    latest_commit_hash: Optional[str]
-    commits: List[CityCommit]
+    latest_commit_hash: str | None
+    commits: list[CityCommit]
 
 
 class CommitDiffResponse(BaseModel):
@@ -61,5 +69,5 @@ class CommitDiffResponse(BaseModel):
     domain_b: str
     timestamp_a: datetime
     timestamp_b: datetime
-    state_diffs: List[StateDiff]
+    state_diffs: list[StateDiff]
     ai_comparative_summary: str

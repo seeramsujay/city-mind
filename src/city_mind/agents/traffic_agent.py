@@ -1,10 +1,10 @@
 """CityMind - Autonomous Traffic Agent."""
 
 import uuid
-from typing import List, Optional
-from city_mind.models.agent import AgentRecommendation, ActionSeverity
-from city_mind.models.telemetry import DomainType, ZoneMetrics
+
 from city_mind.memory.commit_engine import commit_engine
+from city_mind.models.agent import ActionSeverity, AgentRecommendation
+from city_mind.models.telemetry import DomainType, ZoneMetrics
 
 
 class TrafficAgent:
@@ -12,14 +12,16 @@ class TrafficAgent:
         self.agent_name = "TrafficAgent-v1"
         self.domain = DomainType.TRAFFIC
 
-    def evaluate_zone(self, metrics: ZoneMetrics) -> Optional[AgentRecommendation]:
+    def evaluate_zone(self, metrics: ZoneMetrics) -> AgentRecommendation | None:
         speed = metrics.traffic_speed_kmh
         zone_id = metrics.zone_id
 
         if speed < 15.0:
-            recent_commits = commit_engine.list_commits(zone_id=zone_id, domain=self.domain, limit=3)
+            recent_commits = commit_engine.list_commits(
+                zone_id=zone_id, domain=self.domain, limit=3
+            )
             hashes = [c.commit_hash for c in recent_commits]
-            
+
             return AgentRecommendation(
                 recommendation_id=f"rec-trf-{uuid.uuid4().hex[:8]}",
                 agent_name=self.agent_name,
@@ -30,7 +32,10 @@ class TrafficAgent:
                 supporting_commit_hashes=hashes,
                 confidence=0.96,
                 severity=ActionSeverity.HIGH if speed < 10.0 else ActionSeverity.MEDIUM,
-                parameters={"signal_cycle_extension_sec": 30, "reroute_arterials": ["MainSt", "5thAve"]}
+                parameters={
+                    "signal_cycle_extension_sec": 30,
+                    "reroute_arterials": ["MainSt", "5thAve"],
+                },
             )
         return None
 

@@ -1,18 +1,24 @@
 """CityMind - Git-Inspired City Commit Engine."""
 
-from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
-from city_mind.models.commit import CityCommit, StateDiff, TriggerType, CommitDiffResponse
-from city_mind.models.telemetry import DomainType
+from datetime import UTC, datetime
+from typing import Any
+
 from city_mind.memory.delta_logger import delta_logger
+from city_mind.models.commit import (
+    CityCommit,
+    CommitDiffResponse,
+    StateDiff,
+    TriggerType,
+)
+from city_mind.models.telemetry import DomainType
 
 
 class CityCommitEngine:
     def __init__(self):
         # Store commits indexed by commit_hash
-        self.commits_by_hash: Dict[str, CityCommit] = {}
+        self.commits_by_hash: dict[str, CityCommit] = {}
         # Zone timeline commit chains
-        self.zone_commit_chains: Dict[str, List[str]] = {}
+        self.zone_commit_chains: dict[str, list[str]] = {}
         # Seed initial genesis commits
         self._seed_genesis_commits()
 
@@ -23,12 +29,14 @@ class CityCommitEngine:
                 "traffic_speed_kmh": 45.0,
                 "water_level_m": 1.0,
                 "aqi": 42.0,
-                "status": "optimal"
+                "status": "optimal",
             }
-            timestamp_dt = datetime.now(timezone.utc)
+            timestamp_dt = datetime.now(UTC)
             timestamp = timestamp_dt.isoformat()
-            c_hash = CityCommit.generate_hash(None, timestamp, zone, "system", "Genesis Commit")
-            
+            c_hash = CityCommit.generate_hash(
+                None, timestamp, zone, "system", "Genesis Commit"
+            )
+
             commit = CityCommit(
                 commit_hash=c_hash,
                 parent_hash=None,
@@ -38,11 +46,17 @@ class CityCommitEngine:
                 trigger=TriggerType.HEARTBEAT,
                 previous_state={},
                 current_state=initial_state,
-                diffs=[StateDiff(metric="system", previous_value=None, current_value="initialized")],
+                diffs=[
+                    StateDiff(
+                        metric="system",
+                        previous_value=None,
+                        current_value="initialized",
+                    )
+                ],
                 sensor_evidence={"genesis": True},
                 ai_summary=f"Genesis City Commit initialized baseline for {zone}",
                 confidence=1.0,
-                tags=["genesis", "baseline"]
+                tags=["genesis", "baseline"],
             )
             self.commits_by_hash[c_hash] = commit
             self.zone_commit_chains[zone] = [c_hash]
@@ -52,12 +66,12 @@ class CityCommitEngine:
         zone_id: str,
         domain: Any,
         trigger: Any,
-        previous_state: Dict[str, Any],
-        current_state: Dict[str, Any],
-        sensor_evidence: Dict[str, Any],
+        previous_state: dict[str, Any],
+        current_state: dict[str, Any],
+        sensor_evidence: dict[str, Any],
         ai_summary: str,
         confidence: float = 0.95,
-        tags: Optional[List[str]] = None
+        tags: list[str] | None = None,
     ) -> CityCommit:
         # Coerce domain and trigger if passed as string
         domain_enum = DomainType(domain) if isinstance(domain, str) else domain
@@ -65,14 +79,18 @@ class CityCommitEngine:
 
         chain = self.zone_commit_chains.setdefault(zone_id, [])
         parent_hash = chain[-1] if chain else None
-        
+
         diffs = delta_logger.compute_diffs(zone_id, current_state)
-        diff_summary = ", ".join([f"{d.metric}: {d.previous_value}->{d.current_value}" for d in diffs[:3]])
-        
-        timestamp_dt = datetime.now(timezone.utc)
+        diff_summary = ", ".join(
+            [f"{d.metric}: {d.previous_value}->{d.current_value}" for d in diffs[:3]]
+        )
+
+        timestamp_dt = datetime.now(UTC)
         timestamp_str = timestamp_dt.isoformat()
-        commit_hash = CityCommit.generate_hash(parent_hash, timestamp_str, zone_id, domain_enum.value, diff_summary)
-        
+        commit_hash = CityCommit.generate_hash(
+            parent_hash, timestamp_str, zone_id, domain_enum.value, diff_summary
+        )
+
         commit = CityCommit(
             commit_hash=commit_hash,
             parent_hash=parent_hash,
@@ -86,28 +104,34 @@ class CityCommitEngine:
             sensor_evidence=sensor_evidence,
             ai_summary=ai_summary,
             confidence=confidence,
-            tags=tags or [domain_enum.value, trigger_enum.value]
+            tags=tags or [domain_enum.value, trigger_enum.value],
         )
-        
+
         self.commits_by_hash[commit_hash] = commit
         chain.append(commit_hash)
         return commit
 
-    def get_commit(self, commit_hash: str) -> Optional[CityCommit]:
+    def get_commit(self, commit_hash: str) -> CityCommit | None:
         return self.commits_by_hash.get(commit_hash)
 
-    def get_zone_timeline(self, zone_id: str, limit: int = 50) -> List[CityCommit]:
+    def get_zone_timeline(self, zone_id: str, limit: int = 50) -> list[CityCommit]:
         chain = self.zone_commit_chains.get(zone_id, [])
         hashes = chain[-limit:]
-        return [self.commits_by_hash[h] for h in reversed(hashes) if h in self.commits_by_hash]
+        return [
+            self.commits_by_hash[h]
+            for h in reversed(hashes)
+            if h in self.commits_by_hash
+        ]
 
     def list_commits(
         self,
-        zone_id: Optional[str] = None,
-        domain: Optional[DomainType] = None,
-        limit: int = 50
-    ) -> List[CityCommit]:
-        all_commits = sorted(self.commits_by_hash.values(), key=lambda c: c.timestamp, reverse=True)
+        zone_id: str | None = None,
+        domain: DomainType | None = None,
+        limit: int = 50,
+    ) -> list[CityCommit]:
+        all_commits = sorted(
+            self.commits_by_hash.values(), key=lambda c: c.timestamp, reverse=True
+        )
         filtered = []
         for c in all_commits:
             if zone_id and c.zone_id != zone_id:
@@ -119,7 +143,7 @@ class CityCommitEngine:
                 break
         return filtered
 
-    def diff_commits(self, hash_a: str, hash_b: str) -> Optional[CommitDiffResponse]:
+    def diff_commits(self, hash_a: str, hash_b: str) -> CommitDiffResponse | None:
         c_a = self.get_commit(hash_a)
         c_b = self.get_commit(hash_b)
         if not c_a or not c_b:
@@ -137,10 +161,7 @@ class CityCommitEngine:
                     delta = round(v_b - v_a, 2)
                 diffs.append(
                     StateDiff(
-                        metric=k,
-                        previous_value=v_a,
-                        current_value=v_b,
-                        delta=delta
+                        metric=k, previous_value=v_a, current_value=v_b, delta=delta
                     )
                 )
 
@@ -159,7 +180,7 @@ class CityCommitEngine:
             timestamp_a=c_a.timestamp,
             timestamp_b=c_b.timestamp,
             state_diffs=diffs,
-            ai_comparative_summary=summary
+            ai_comparative_summary=summary,
         )
 
 

@@ -1,11 +1,10 @@
 """Unit tests for Predictive Intelligence and Digital Twin Simulator."""
 
-import pytest
-from city_mind.predictions.forecast_engine import ForecastEngine
-from city_mind.models.prediction import ForecastHorizon
 from city_mind.digital_twin.simulator import DigitalTwinSimulator
+from city_mind.models.prediction import ForecastHorizon
+from city_mind.models.telemetry import DomainType, SensorReading
+from city_mind.predictions.forecast_engine import ForecastEngine
 from city_mind.services.telemetry_service import telemetry_service
-from city_mind.models.telemetry import SensorReading, DomainType
 
 
 def test_forecast_engine_alerts_and_forecasting():
@@ -19,7 +18,7 @@ def test_forecast_engine_alerts_and_forecasting():
             domain=DomainType.ENVIRONMENT,
             metric_name="water_level_m",
             value=2.4,
-            unit="m"
+            unit="m",
         )
     )
 
@@ -27,7 +26,9 @@ def test_forecast_engine_alerts_and_forecasting():
     assert isinstance(alerts, list)
     assert len(alerts) > 0
 
-    forecast = engine.get_domain_forecast(domain="environment", zone_id="zone-west", horizon=ForecastHorizon.FOUR_HOURS)
+    forecast = engine.get_domain_forecast(
+        domain="environment", zone_id="zone-west", horizon=ForecastHorizon.FOUR_HOURS
+    )
     assert forecast.domain == "environment"
     assert len(forecast.forecast_points) == 12
     assert forecast.confidence > 0.8
