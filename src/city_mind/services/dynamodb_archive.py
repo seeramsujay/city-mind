@@ -5,8 +5,9 @@ Archives SHA-256 City Commits, state snapshots, and telemetry anomaly logs.
 """
 
 import json
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
+
 from city_mind.core.config import settings
 from city_mind.models.commit import CityCommit
 
@@ -16,13 +17,17 @@ class AmazonDynamoDBArchiveService:
         self.enabled = False
         self._dynamodb_resource = None
         self._table = None
-        self.local_archive: Dict[str, Dict[str, Any]] = {}
+        self.local_archive: dict[str, dict[str, Any]] = {}
         self._init_client()
 
     def _init_client(self):
         try:
             import boto3
-            if not settings.AWS_ACCESS_KEY_ID or settings.AWS_ACCESS_KEY_ID == "your_aws_access_key_id_here":
+
+            if (
+                not settings.AWS_ACCESS_KEY_ID
+                or settings.AWS_ACCESS_KEY_ID == "your_aws_access_key_id_here"
+            ):
                 self.enabled = False
                 return
 
@@ -33,7 +38,9 @@ class AmazonDynamoDBArchiveService:
                 session_kwargs["aws_session_token"] = settings.AWS_SESSION_TOKEN
 
             self._dynamodb_resource = boto3.resource("dynamodb", **session_kwargs)
-            self._table = self._dynamodb_resource.Table(settings.AWS_DYNAMODB_TABLE_NAME)
+            self._table = self._dynamodb_resource.Table(
+                settings.AWS_DYNAMODB_TABLE_NAME
+            )
             self.enabled = True
         except Exception:
             # Local in-memory fallback mode when AWS credentials / boto3 runtime are not active
@@ -51,12 +58,16 @@ class AmazonDynamoDBArchiveService:
             "trigger": commit.trigger.value,
             "ai_summary": commit.ai_summary,
             "confidence": str(commit.confidence),
-            "timestamp": commit.timestamp.isoformat() if isinstance(commit.timestamp, datetime) else str(commit.timestamp),
+            "timestamp": (
+                commit.timestamp.isoformat()
+                if isinstance(commit.timestamp, datetime)
+                else str(commit.timestamp)
+            ),
             "tags": commit.tags,
             "current_state_json": json.dumps(commit.current_state),
             "previous_state_json": json.dumps(commit.previous_state),
             "sensor_evidence_json": json.dumps(commit.sensor_evidence),
-            "archived_at": datetime.now(timezone.utc).isoformat()
+            "archived_at": datetime.now(UTC).isoformat(),
         }
 
         # Keep local audit memory
@@ -71,8 +82,7 @@ class AmazonDynamoDBArchiveService:
         except Exception:
             return True
 
-
-    def get_commit(self, commit_hash: str) -> Optional[Dict[str, Any]]:
+    def get_commit(self, commit_hash: str) -> dict[str, Any] | None:
         """Retrieves commit metadata from DynamoDB or local fallback."""
         if commit_hash in self.local_archive:
             return self.local_archive[commit_hash]
@@ -87,14 +97,14 @@ class AmazonDynamoDBArchiveService:
         except Exception:
             return None
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Returns DynamoDB service status and Free Tier metrics."""
         return {
             "dynamodb_service_enabled": self.enabled,
             "table_name": settings.AWS_DYNAMODB_TABLE_NAME,
             "aws_region": settings.AWS_REGION,
             "tier": "AWS Forever Free (25GB Storage, 25 WCU / 25 RCU)",
-            "total_archived_in_memory": len(self.local_archive)
+            "total_archived_in_memory": len(self.local_archive),
         }
 
 

@@ -4,7 +4,8 @@ Archives SHA-256 City Commit payloads and telemetry streams into S3 object stora
 """
 
 import json
-from typing import Dict, Any, Optional
+from typing import Any
+
 from city_mind.core.config import settings
 from city_mind.models.commit import CityCommit
 
@@ -19,7 +20,11 @@ class AmazonS3ArchiveService:
     def _init_client(self):
         try:
             import boto3
-            if not settings.AWS_ACCESS_KEY_ID or settings.AWS_ACCESS_KEY_ID == "your_aws_access_key_id_here":
+
+            if (
+                not settings.AWS_ACCESS_KEY_ID
+                or settings.AWS_ACCESS_KEY_ID == "your_aws_access_key_id_here"
+            ):
                 self.enabled = False
                 return
 
@@ -43,7 +48,7 @@ class AmazonS3ArchiveService:
         try:
             s3_key = f"commits/{commit.zone_id}/{commit.domain.value}/{commit.commit_hash}.json"
             payload = json.dumps(commit.model_dump(mode="json"), indent=2)
-            
+
             self._s3_client.put_object(
                 Bucket=settings.AWS_S3_BUCKET_NAME,
                 Key=s3_key,
@@ -52,20 +57,20 @@ class AmazonS3ArchiveService:
                 Metadata={
                     "zone_id": commit.zone_id,
                     "domain": commit.domain.value,
-                    "trigger": commit.trigger.value
-                }
+                    "trigger": commit.trigger.value,
+                },
             )
             return True
         except Exception:
             return False
 
-    def get_archive_status(self) -> Dict[str, Any]:
+    def get_archive_status(self) -> dict[str, Any]:
         """Returns S3 archival statistics."""
         return {
             "s3_archive_enabled": self.enabled,
             "bucket_name": settings.AWS_S3_BUCKET_NAME,
             "aws_region": settings.AWS_REGION,
-            "total_archived_commits": self.archived_count
+            "total_archived_commits": self.archived_count,
         }
 
 
