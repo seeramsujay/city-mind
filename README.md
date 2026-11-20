@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/logo.svg" alt="CityMind Logo" width="160" />
+
 # 🌆 CityMind
 
 ### *A Git-Inspired AI Memory Operating System for Smart Cities*
